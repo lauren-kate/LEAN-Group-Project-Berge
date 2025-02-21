@@ -57,4 +57,12 @@ namespace walk
 theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M :=
   sorry
 
+theorem IfBerge{M : G.Subgraph} (h: M.IsMatching):
+∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M → ¬ IsMaximumMatching M :=
+  sorry
+
+
+theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p: G.IsAugmenting M} (h1: M.IsMatching):
+∀v ∈ V, v∈p.support → ∃!w, M.adj v w :=
+sorry
 end walk
