@@ -28,6 +28,7 @@ structure IsAlternating {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.Is
 -- support is not just the set of vertices, it's the domain of the adj relation so this should be correct
 structure IsAugmenting {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsAlternating M : Prop where
   ends_unsaturated : u ∉ M.support ∧ v ∉ M.support
+  ends_distinct: u ≠ v
 
 end Walk
 
@@ -54,15 +55,24 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
 
 namespace walk
 
-theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M :=
-  sorry
 
 theorem IfBerge{M : G.Subgraph} (h: M.IsMatching):
 ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M → ¬ IsMaximumMatching M :=
   sorry
 
+theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+  apply Iff.intro
+  · sorry
+  · exact IfBerge
 
-theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p: G.IsAugmenting M} (h1: M.IsMatching):
-∀v ∈ V, v∈p.support → ∃!w, M.adj v w :=
+
+
+theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p: } (h1: M.IsMatching):
+∀v ∈ V, v∈p.support → ∃!w,  M.adj v w := by
 sorry
+
+theorem AugPathUniqueNeighbourInAugPath {M:G.subgraph} {p:}(h1: M.IsMatching):
+∀v,w∈V, v∈p.support ∧ M.adj v w → w∈p.support := by
+sorry
+
 end walk
