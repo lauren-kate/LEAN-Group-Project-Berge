@@ -19,15 +19,16 @@ variable {M : G.Subgraph}
 variable {u v w: V}
 
 
--- as a predicate on walks/subgraphs (structure)
 namespace Walk
 
-structure IsAlternating {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
+structure IsAlternatingCycle {F : SimpleGraph V} {u : V} (p : F.Walk u u) (M : G.Subgraph) extends p.IsCycle : Prop where
   alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
 
--- support is not just the set of vertices, it's the domain of the adj relation so this should be correct
-structure IsAugmenting {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsAlternating M : Prop where
-  ends_unsaturated : u ∉ M.support ∧ v ∉ M.support
+structure IsAlternatingPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
+  alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
+
+structure IsAugmentingPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsAlternatingPath M : Prop where
+  ends_unsaturated : u≠v ∧ u ∉ M.support ∧ v ∉ M.support
 
 end Walk
 
@@ -36,7 +37,7 @@ end Walk
 namespace Subgraph
 
 def augPath {G : SimpleGraph V} (M : G.Subgraph) (u v : V) : Type u :=
-  {w : G.Walk u v // w.IsAugmenting M}
+  {w : G.Walk u v // w.IsAugmentingPath M}
 
 end Subgraph
 
@@ -54,7 +55,7 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
 
 namespace walk
 
-theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M :=
+theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
   sorry
 
 end walk

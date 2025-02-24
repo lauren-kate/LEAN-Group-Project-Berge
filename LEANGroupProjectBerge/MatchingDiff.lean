@@ -116,28 +116,16 @@ theorem matching_symm_diff_dg_lt2 (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatc
 
 
 
-namespace Walk
-
-structure IsAltCycle {F : SimpleGraph V} {u : V} (p : F.Walk u u) (M : G.Subgraph) extends p.IsCycle : Prop where
-  alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
-
-structure IsAltPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
-  alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
-
-structure IsAugPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsAltPath M : Prop where
-  ends_unsaturated : u≠v ∧ u ∉ M.support ∧ v ∉ M.support
-
-end Walk
 
 
 namespace ConnectedComponent
 
 def componentAltCycle {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u : V) (p : F.Walk u u), p.IsAltCycle M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+  ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
 
 
 def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u v : V) (p : F.Walk u v), p.IsAltPath M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+  ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
 
 end ConnectedComponent
 
@@ -148,6 +136,6 @@ theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M
     sorry
 
 
-theorem aug_symm_diff_gt {u v : V} {M : G.Subgraph} {p : G.Walk u v} (h : p.IsAugmenting M) :
+theorem aug_symm_diff_gt {u v : V} {M : G.Subgraph} {p : G.Walk u v} (h : p.IsAugmentingPath M) :
   (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard := by
   sorry
