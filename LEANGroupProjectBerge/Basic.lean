@@ -60,10 +60,14 @@ theorem IfBerge{M : G.Subgraph} (h: M.IsMatching):
 ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M → ¬ IsMaximumMatching M :=
   sorry
 
+theorem OnlyIfBerge{M: G.Subgraph} (h: M.IsMatching):
+IsMaximumMatching M → ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+sorry
+
 theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
   apply Iff.intro
-  · sorry
-  · exact IfBerge
+  · aesop
+  · aesop
 
 
 
