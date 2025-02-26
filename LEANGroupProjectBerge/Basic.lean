@@ -66,16 +66,16 @@ sorry
 
 theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
   apply Iff.intro
-  · aesop
-  · aesop
+  · exact IfBerge
+  · exact OnlyIfBerge
 
 
 
-theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p: } (h1: M.IsMatching):
+theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v} (h1: M.IsMatching):
 ∀v ∈ V, v∈p.support → ∃!w,  M.adj v w := by
 sorry
 
-theorem AugPathUniqueNeighbourInAugPath {M:G.subgraph} {p:}(h1: M.IsMatching):
+theorem AugPathUniqueNeighbourInAugPath {M:G.subgraph} {}(h1: M.IsMatching):
 ∀v,w∈V, v∈p.support ∧ M.adj v w → w∈p.support := by
 sorry
 
