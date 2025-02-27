@@ -51,31 +51,44 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
   M.IsMatching
   ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
 
+lemma IfMaximalMatchingThenMatching (M:G.Subgraph):
+IsMaximalMatching M -> M.IsMatching := by
+  intro h
+  obtain ⟨h1,h2⟩ := h
+  exact h1
+
+lemma IfMaximumMatchingThenMatching (M:G.Subgraph):
+IsMaximumMatching M -> M.IsMatching := by
+  intro h
+  obtain ⟨h1,h2⟩ := h
+  exact h1
 
 
 namespace walk
 
 
-theorem IfBerge{M : G.Subgraph} (h: M.IsMatching):
+theorem IfBerge{M : G.Subgraph}{h: M.IsMatching} :
 ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M → ¬ IsMaximumMatching M :=
   sorry
 
-theorem OnlyIfBerge{M: G.Subgraph} (h: M.IsMatching):
-IsMaximumMatching M → ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+theorem OnlyIfBerge{M: G.Subgraph}{h: M.IsMatching}:
+¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
 sorry
 
-theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+theorem BergesTheorem{M : G.Subgraph} {h: M.IsMatching}: IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
   apply Iff.intro
-  · exact IfBerge
-  · exact OnlyIfBerge
+  · contrapose
+    intro a
+    simp_all only [not_exists, not_forall, not_not]
+    revert a
 
 
 
-theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v} (h1: M.IsMatching):
+theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v} (h1: M.IsMatching)(h2: ):
 ∀v ∈ V, v∈p.support → ∃!w,  M.adj v w := by
 sorry
 
-theorem AugPathUniqueNeighbourInAugPath {M:G.subgraph} {}(h1: M.IsMatching):
+theorem AugPathUniqueNeighbourInAugPath {M:G.subgraph}{}(h1: M.IsMatching):
 ∀v,w∈V, v∈p.support ∧ M.adj v w → w∈p.support := by
 sorry
 
