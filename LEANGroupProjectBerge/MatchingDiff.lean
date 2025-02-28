@@ -136,6 +136,59 @@ theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M
     sorry
 
 
+
+
+
+
+lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v w} :
+    (Walk.cons h p).IsAlternatingPath M₁ → p.IsAlternatingPath M₁ := by
+  intro h_alt
+  constructor
+  · exact h_alt.of_cons
+  · intros x y z h_xnez h_xy h_yz
+    let p' := Walk.cons h p
+    have h_xyp' : s(x,y) ∈ p'.edges := by aesop
+    have h_yzp' : s(y,z) ∈ p'.edges := by aesop
+    exact h_alt.alternates h_xnez h_xyp' h_yzp'
+
+
+
+lemma aug_card {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M₁.IsMatching) :
+    u≠v → v ∉ M₁.support → p.IsAlternatingPath M₁ →
+    (M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard )
+    ∧ (¬M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard + 1) := by
+  induction p with
+  | nil =>
+    intros
+    contradiction
+  | cons h_adj p' ih =>
+    rename_i u w v
+    intros h_unv h_vunsat h_consalt
+    have h_p'alt : p'.IsAlternatingPath M₁ := alt_of_cons h_consalt
+    let p := Walk.cons h_adj p'
+    apply And.intro
+    · show M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard
+      intro h_endmatch
+      match em (w=v) with
+      | Or.inl h_eq =>
+        have : p.getVert 1 = v := by aesop
+        rw [this] at h_endmatch
+        have : v∈ M₁.support := M₁.mem_support.mpr ⟨u, M₁.adj_symm h_endmatch⟩
+        contradiction
+      | Or.inr h_neq =>
+        have : (M₁.Adj w (p'.getVert 1) → p'.toSubgraph.edgeSet.encard = 2 * M₁.edgeSet.encard) ∧
+                (¬M₁.Adj w (p'.getVert 1) → p'.toSubgraph.edgeSet.encard = 2 * M₁.edgeSet.encard + 1) :=
+                ih h_neq h_vunsat h_p'alt
+        sorry
+    · show ¬M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard + 1
+      intro h_uunsat
+      sorry
+
+
+
+
 theorem aug_symm_diff_gt {u v : V} {M : G.Subgraph} {p : G.Walk u v} (h : p.IsAugmentingPath M) :
   (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard := by
+  let F := (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)
+  show F.edgeSet.ncard > M.edgeSet.ncard
   sorry

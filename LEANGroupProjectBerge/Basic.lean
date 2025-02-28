@@ -59,3 +59,16 @@ theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, �
   sorry
 
 end walk
+
+
+namespace Subgraph
+
+--Use this to delete unsaturated vertices to get IsMatching for a subgraph
+def saturatedSubgraph (M : G.Subgraph) : G.Subgraph where
+  verts := M.support;
+  Adj := M.Adj;
+  adj_sub := M.adj_sub;
+  edge_vert := fun h => M.mem_support.mpr ⟨_, h⟩ ;
+  symm := M.symm;
+
+namespace Subgraph
