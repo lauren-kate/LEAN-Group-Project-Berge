@@ -155,8 +155,8 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
 
 lemma aug_card {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M₁.IsMatching) :
     u≠v → v ∉ M₁.support → p.IsAlternatingPath M₁ →
-    (M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard )
-    ∧ (¬M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard + 1) := by
+    (M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*(M₁.edgeSet ∩ p.toSubgraph.edgeSet).encard )
+    ∧ (¬M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*(M₁.edgeSet ∩ p.toSubgraph.edgeSet).encard + 1) := by
   induction p with
   | nil =>
     intros
@@ -166,8 +166,10 @@ lemma aug_card {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M₁.IsMatch
     intros h_unv h_vunsat h_consalt
     have h_p'alt : p'.IsAlternatingPath M₁ := alt_of_cons h_consalt
     let p := Walk.cons h_adj p'
+    let EP := p.toSubgraph.edgeSet
+    let EPnM := M₁.edgeSet ∩ p.toSubgraph.edgeSet
     apply And.intro
-    · show M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard
+    · show M₁.Adj u (p.getVert 1) → EP.encard = 2*EPnM.encard
       intro h_endmatch
       match em (w=v) with
       | Or.inl h_eq =>
@@ -176,11 +178,13 @@ lemma aug_card {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M₁.IsMatch
         have : v∈ M₁.support := M₁.mem_support.mpr ⟨u, M₁.adj_symm h_endmatch⟩
         contradiction
       | Or.inr h_neq =>
-        have : (M₁.Adj w (p'.getVert 1) → p'.toSubgraph.edgeSet.encard = 2 * M₁.edgeSet.encard) ∧
-                (¬M₁.Adj w (p'.getVert 1) → p'.toSubgraph.edgeSet.encard = 2 * M₁.edgeSet.encard + 1) :=
+        let EP' := p'.toSubgraph.edgeSet
+        let EP'nM := M₁.edgeSet ∩ p'.toSubgraph.edgeSet
+        have : (M₁.Adj w (p'.getVert 1) → EP'.encard = 2 * EP'nM.encard) ∧
+                (¬M₁.Adj w (p'.getVert 1) → EP'.encard = 2 * EP'nM.encard + 1) :=
                 ih h_neq h_vunsat h_p'alt
         sorry
-    · show ¬M₁.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.encard = 2*M₁.edgeSet.encard + 1
+    · show ¬M₁.Adj u (p.getVert 1) → EP.encard = 2*EPnM.encard + 1
       intro h_uunsat
       sorry
 
