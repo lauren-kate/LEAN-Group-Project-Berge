@@ -9,6 +9,7 @@ import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 namespace SimpleGraph
 
@@ -54,7 +55,15 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
 
 namespace walk
 
-theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M :=
+theorem BergesTheorem (M : G.Subgraph) (h : M.IsMatching)  :
+IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M:=
   sorry
 
+
+lemma symmDiffIsMatching (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmenting M): (symmDiff M p.toSubgraph).IsMatching :=
+sorry
+
+
+lemma outsidePath (M M':G.Subgraph) (u v:V) (p : G.Walk u v) (h1:M.IsMatching) (h2: p.IsAugmenting M) (h3 : M' = (symmDiff M p.toSubgraph) ) : ∀ v w:V, M.Adj v w :=
+sorry
 end walk
