@@ -9,6 +9,7 @@ import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 namespace SimpleGraph
 
@@ -22,11 +23,11 @@ variable {u v w: V}
 -- as a predicate on walks/subgraphs (structure)
 namespace Walk
 
-structure IsAlternating {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
+structure IsAlternatingPath {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
   alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
 
 -- support is not just the set of vertices, it's the domain of the adj relation so this should be correct
-structure IsAugmenting {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsAlternating M : Prop where
+structure IsAugmentingPath {u v : V} (p : G.Walk u v) (M : G.Subgraph) extends p.IsAlternatingPath M : Prop where
   ends_unsaturated : u ≠ v ∧ u ∉ M.support ∧ v ∉ M.support
 
 end Walk
@@ -66,7 +67,7 @@ IsMaximumMatching M -> M.IsMatching := by
 namespace walk
 
 
-theorem IfBerge{M : G.Subgraph}:
+theorem IfBerge{M:G.Subgraph}:
 ∃ u v: V, ∃ p: G.Walk u v, (p.IsAugmenting M) → ¬ IsMaximumMatching M := by
   sorry
 
@@ -75,7 +76,8 @@ theorem OnlyIfBerge{M: G.Subgraph}:
 ¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
 sorry
 
-theorem BergesTheorem{M : G.Subgraph} {h: M.IsMatching}: IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+theorem BergesTheorem{M:G.Subgraph} {h: M.IsMatching} [Fintype V]:
+IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
   apply Iff.intro
   · contrapose
     intro a
@@ -91,12 +93,12 @@ theorem BergesTheorem{M : G.Subgraph} {h: M.IsMatching}: IsMaximumMatching M ↔
 
 end walk
 
-theorem VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v}
-(h1: M.IsMatching)(h2:p.IsAugmenting M ):
-∀{w}, w∈p.support → ∃!w' : M.verts ,  M.adj w w' := by
+lemma VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v}
+(h1: M.IsMatching)(h2:p.IsAugmenting M)(h3:):
+∀{w}, w ∈ p.support ∧ w ∈ M.verts → ∃!w',  M.adj w w' := by
 sorry
 
-theorem AugPathUniqueNeighbourInAugPath {M:G.Subgraph}{p: G.Walk u v}
-(h1: M.IsMatching)(h2: p.IsAugmenting M):
-∀w' w : V, w'∈p.support ∧ M.adj w' w → w∈p.support := by
+lemma AugPathUniqueNeighbourInAugPath {M:G.Subgraph}{p: G.Walk u v}
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M) (F: symmDiff M.spanningCoe p.toSubgraph.spanningCoe):
+∀w' w : V, w'∈p.support ∧ F.adj w' w → w∈p.support := by
 sorry
