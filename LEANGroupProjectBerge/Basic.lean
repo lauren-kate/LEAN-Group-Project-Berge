@@ -37,7 +37,7 @@ end Walk
 namespace Subgraph
 
 def augPath {G : SimpleGraph V} (M : G.Subgraph) (u v : V) : Type u :=
-  {w : G.Walk u v // w.IsAugmenting M}
+  {w : G.Walk u v // w.IsAugmentingPath M}
 
 end Subgraph
 
@@ -67,17 +67,17 @@ IsMaximumMatching M -> M.IsMatching := by
 namespace walk
 
 
-theorem IfBerge{M:G.Subgraph}:
-∃ u v: V, ∃ p: G.Walk u v, (p.IsAugmenting M) → ¬ IsMaximumMatching M := by
+theorem IfBerge{M:G.Subgraph}[Fintype V]:
+∃ u v: V, ∃ p: G.Walk u v, (p.IsAugmentingPath M) → ¬ IsMaximumMatching M := by
   sorry
 
 
-theorem OnlyIfBerge{M: G.Subgraph}:
-¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+theorem OnlyIfBerge{M: G.Subgraph}[Fintype V]:
+¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
 sorry
 
-theorem BergesTheorem{M:G.Subgraph} {h: M.IsMatching} [Fintype V]:
-IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
+theorem BergesTheorem{M₁ M₂ :G.Subgraph} {h1: M.IsMatching} [Fintype V]:
+IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
   apply Iff.intro
   · contrapose
     intro a
@@ -93,12 +93,22 @@ IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M := by
 
 end walk
 
-lemma VerticeHasUniqueNeighbourIfInAugmentingPath {M:G.Subgraph}{p:G.Walk u v}
-(h1: M.IsMatching)(h2:p.IsAugmenting M)(h3:):
-∀{w}, w ∈ p.support ∧ w ∈ M.verts → ∃!w',  M.adj w w' := by
+
+
+lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
+∀w' w : V, w'∈p.support ∧ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w' w → w∈p.support := by
+let F:=symmDiff M.spanningCoe p.toSubgraph.spanningCoe
+intro w w' h3
+obtain ⟨h3,h4⟩ := h3
 sorry
 
-lemma AugPathUniqueNeighbourInAugPath {M:G.Subgraph}{p: G.Walk u v}
-(h1: M.IsMatching)(h2: p.IsAugmentingPath M) (F: symmDiff M.spanningCoe p.toSubgraph.spanningCoe):
-∀w' w : V, w'∈p.support ∧ F.adj w' w → w∈p.support := by
+lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M):
+∀x y : V, x ∈ p.support → y ∉ p.support →
+  ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y
+:= by
 sorry
+--issue, F is not a matching as there are singelton vertices
+--is there a way to drop these already in LEAN or
+--should I write this?
