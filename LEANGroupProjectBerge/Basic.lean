@@ -71,4 +71,18 @@ def saturatedSubgraph (M : G.Subgraph) : G.Subgraph where
   edge_vert := fun h => M.mem_support.mpr ⟨_, h⟩ ;
   symm := M.symm;
 
-namespace Subgraph
+end Subgraph
+
+
+
+
+namespace ConnectedComponent
+
+def componentAltCycle {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
+  ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+
+
+def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
+  ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+
+end ConnectedComponent
