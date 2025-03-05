@@ -28,6 +28,17 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
     exact h_alt.alternates h_xnez h_xyp' h_yzp'
 
 
+lemma cons_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h : F.Adj u v) (p : F.Walk v w) :
+    s(u,v) ∉ p.edges → (Walk.cons h p).toSubgraph.edgeSet.ncard = p.toSubgraph.edgeSet.ncard + 1 := by
+  have := Fintype.ofFinite V
+  have : (Walk.cons h p).toSubgraph.edgeSet = insert s(u,v) p.toSubgraph.edgeSet := by aesop
+  rw [this]
+  intro h
+  have : s(u,v) ∉ p.toSubgraph.edgeSet := by aesop
+  exact Set.ncard_insert_of_not_mem this
+
+
+
 
 lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M.IsMatching) :
     u≠v → v ∉ M.support → p.IsAlternatingPath M →
@@ -37,15 +48,15 @@ lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M
   | nil =>
     intros
     contradiction
-  | cons h_adj p' ih =>
+  | cons h_adj q ih =>
     rename_i u w v
     intros h_unv h_vunsat h_consalt
-    have h_p'alt : p'.IsAlternatingPath M := alt_of_cons h_consalt
-    let p := Walk.cons h_adj p'
+    have h_q_alt : q.IsAlternatingPath M := alt_of_cons h_consalt
+    let p := Walk.cons h_adj q
     let EP := p.toSubgraph.edgeSet
-    let EPnM := M.edgeSet ∩ p.toSubgraph.edgeSet
+    let EPandM := M.edgeSet ∩ p.toSubgraph.edgeSet
     apply And.intro
-    · show M.Adj u (p.getVert 1) → EP.ncard = 2*EPnM.ncard
+    · show M.Adj u (p.getVert 1) → EP.ncard = 2*EPandM.ncard
       intro h_endmatch
       match em (w=v) with
       | Or.inl h_eq =>
@@ -54,18 +65,22 @@ lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M
         have : v∈ M.support := M.mem_support.mpr ⟨u, M.adj_symm h_endmatch⟩
         contradiction
       | Or.inr h_neq =>
-        let EP' := p'.toSubgraph.edgeSet
-        let EP'andM := M.edgeSet ∩ p'.toSubgraph.edgeSet
-        specialize ih h_neq h_vunsat h_p'alt
-        change  (M.Adj w (p'.getVert 1) → EP'.ncard = 2 * EP'andM.ncard) ∧
-                (¬M.Adj w (p'.getVert 1) → EP'.ncard = 2 * EP'andM.ncard + 1) at ih
-        have h1 : u ≠ p'.getVert 1 := by sorry
-        have h3 : s(w, p'.getVert 1) ∈ p.edges := by sorry
+        let EQ := q.toSubgraph.edgeSet
+        let EQandM := M.edgeSet ∩ q.toSubgraph.edgeSet
+        specialize ih h_neq h_vunsat h_q_alt
+        change  (M.Adj w (q.getVert 1) → EQ.ncard = 2 * EQandM.ncard) ∧
+                (¬M.Adj w (q.getVert 1) → EQ.ncard = 2 * EQandM.ncard + 1) at ih
+        have h_u_nodup : u ≠ q.getVert 1 := by sorry
+        have h_w_edge : s(w, q.getVert 1) ∈ p.edges := by sorry
         have heq : p.getVert 1 = w := by aesop
         rw [heq] at h_endmatch
-        replace ih := ih.2  ((h_consalt.alternates h1 (by aesop) h3).mp h_endmatch)
-        sorry
-    · show ¬M.Adj u (p.getVert 1) → EP.ncard = 2*EPnM.ncard + 1
+        replace ih := ih.2  ((h_consalt.alternates h_u_nodup (by aesop) h_w_edge).mp h_endmatch)
+        have : EP.ncard = EQ.ncard + 1 := cons_edgeset_card _ _ sorry
+        rw [this]
+        have : EPandM.ncard = EQandM.ncard + 1 := by sorry
+        rw [this]
+        omega
+    · show ¬M.Adj u (p.getVert 1) → EP.ncard = 2*EPandM.ncard + 1
       intro h_uunsat
       sorry
 
@@ -73,7 +88,7 @@ lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M
 
 
 
-lemma symm_diff_card (α : Type u) (A B : Set α) [Finite A] [Finite B] : (symmDiff A B).ncard = A.ncard + B.ncard - 2*(A ∩ B).ncard := by
+lemma symm_diff_card {α : Type u} (A B : Set α) [Finite A] [Finite B] : (symmDiff A B).ncard = A.ncard + B.ncard - 2*(A ∩ B).ncard := by
   rw [symmDiff_eq_sup_sdiff_inf]; simp
   have : ((A ∪ B) \ (A ∩ B)).ncard + (A ∩ B).ncard = ((A ∪ B) ∪ (A ∩ B)).ncard := Set.ncard_diff_add_ncard (A ∪ B) (A ∩ B)
   replace this : ((A ∪ B) \ (A ∩ B)).ncard = ((A ∪ B) ∪ (A ∩ B)).ncard - (A ∩ B).ncard := by omega
