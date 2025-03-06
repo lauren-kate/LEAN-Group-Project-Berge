@@ -28,6 +28,7 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
     exact h_alt.alternates h_xnez h_xyp' h_yzp'
 
 
+
 lemma cons_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h : F.Adj u v) (p : F.Walk v w) :
     s(u,v) ∉ p.edges → (Walk.cons h p).toSubgraph.edgeSet.ncard = p.toSubgraph.edgeSet.ncard + 1 := by
   have := Fintype.ofFinite V
@@ -36,6 +37,7 @@ lemma cons_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h : F.Adj u 
   intro h
   have : s(u,v) ∉ p.toSubgraph.edgeSet := by aesop
   exact Set.ncard_insert_of_not_mem this
+
 
 
 lemma cons_matched_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h_m : M.Adj u v) (h_f : F.Adj u v) (p : F.Walk v w) :
@@ -49,6 +51,7 @@ lemma cons_matched_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h_m 
   exact Set.ncard_insert_of_not_mem this
 
 
+
 lemma path_cons_nodup {u v w : V} {F : SimpleGraph V} (h_f : F.Adj u v) (p : F.Walk v w) :
     (Walk.cons h_f p).IsPath → s(u, v) ∉ p.edges := by
   intro h_path
@@ -58,7 +61,22 @@ lemma path_cons_nodup {u v w : V} {F : SimpleGraph V} (h_f : F.Adj u v) (p : F.W
   contradiction
 
 
-lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M.IsMatching) :
+lemma path_single_edgeset {u v w : V} {F : SimpleGraph V} {p : F.Walk w v} (h_eq : w=v) (h_adj : F.Adj u w):
+    (Walk.cons h_adj p).IsPath → (Walk.cons h_adj p).toSubgraph.edgeSet = {s(u,w)} := by
+  intro h
+  let p' : F.Walk w w := p.copy rfl (Eq.symm h_eq)
+  have h_ppath: p.IsPath := h.of_cons
+  have : p'.IsPath := (p.isPath_copy rfl (Eq.symm h_eq)).mpr h_ppath
+  have : p'.edges = p.edges := by aesop
+  have : p' = Walk.nil := by aesop
+  have : p.edges = [] :=  by aesop
+  have : (Walk.cons h_adj p).edges = [s(u,v)] := by aesop
+  aesop
+
+
+
+
+lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) :
     u≠v → v ∉ M.support → p.IsAlternatingPath M →
     (M.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.ncard = 2*(M.edgeSet ∩ p.toSubgraph.edgeSet).ncard )
     ∧ (¬M.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.ncard = 2*(M.edgeSet ∩ p.toSubgraph.edgeSet).ncard + 1) := by
@@ -108,7 +126,45 @@ lemma aug_card [Finite V] {u v : V} {F : SimpleGraph V} (p : F.Walk u v) (hm : M
         omega
     · show ¬M.Adj u (p.getVert 1) → EP.ncard = 2*EMandP.ncard + 1
       intro h_uunsat
-      sorry
+      match em (w=v) with
+      | Or.inl h_eq =>
+        have h_ep_single : EP = {s(u,w)} := path_single_edgeset h_eq h_adj h_consalt.toIsPath
+        have h_uw_unmatch : s(u,w) ∉ M.edgeSet := by aesop
+        have : EMandP = {} := by
+          unfold EMandP; unfold EP at h_ep_single
+          rw [h_ep_single]
+          aesop
+        aesop
+      | Or.inr h_neq =>
+        let EQ := q.toSubgraph.edgeSet
+        let EMandQ := M.edgeSet ∩ q.toSubgraph.edgeSet
+        specialize ih h_neq h_vunsat h_q_alt
+        change  (M.Adj w (q.getVert 1) → EQ.ncard = 2 * EMandQ.ncard) ∧
+                (¬M.Adj w (q.getVert 1) → EQ.ncard = 2 * EMandQ.ncard + 1) at ih
+        have h_u_nodup : u ≠ q.getVert 1 := by
+          cases q with
+          | nil => contradiction
+          | cons h_adj' q' =>
+            let x := (Walk.cons h_adj' q').getVert 1
+            exact (List.pairwise_cons.mp h_consalt.support_nodup).1 x (by aesop)
+        have h_w_edge : s(w, q.getVert 1) ∈ p.edges := by
+          cases q with
+          | nil => contradiction
+          | cons h_adj' q' => aesop
+        have heq : p.getVert 1 = w := by aesop
+        rw [heq] at h_uunsat
+        have h' : M.Adj w (q.getVert 1) := by
+          let x := q.getVert 1
+          have h_wx_edge : s(w, x) ∈ p.edges := by aesop
+          have h_ux_edge : s(u, w) ∈ p.edges := by aesop
+          have := h_consalt.alternates h_u_nodup h_ux_edge h_wx_edge
+          aesop
+        replace ih := ih.left h'
+        have h_mpq : EMandP = EMandQ := by aesop
+        rw [←h_mpq] at ih
+        rw [←ih]
+        have : s(u,w) ∉ q.edges := path_cons_nodup h_adj q h_consalt.toIsPath
+        exact cons_edgeset_card h_adj q this
 
 
 
@@ -128,10 +184,10 @@ lemma symm_diff_card {α : Type u} (A B : Set α) [Finite A] [Finite B] : (symmD
 
 
 
-lemma aug_path_card [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmentingPath M) (hm : M.IsMatching):
+lemma aug_path_card [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmentingPath M):
     p.toSubgraph.edgeSet.ncard = 2*(M.edgeSet ∩ p.toSubgraph.edgeSet).ncard + 1 := by
   have : ¬M.Adj u (p.getVert 1) → p.toSubgraph.edgeSet.ncard = 2*(M.edgeSet ∩ p.toSubgraph.edgeSet).ncard + 1 :=
-    (aug_card p hm h.ends_unsaturated.1 h.ends_unsaturated.2.2 h.toIsAlternatingPath).2
+    (aug_card p h.ends_unsaturated.1 h.ends_unsaturated.2.2 h.toIsAlternatingPath).2
   apply this
   have : u ∉ M.support := h.ends_unsaturated.2.1
   intro h_adj
@@ -144,10 +200,10 @@ lemma symm_diff_edgeset (G' : SimpleGraph V) : (symmDiff G G').edgeSet = symmDif
 
 
 
-theorem aug_symm_diff_gt [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmentingPath M) (hm : M.IsMatching):
+theorem aug_symm_diff_gt [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmentingPath M):
   (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard := by
   have hs : (H : G.Subgraph) → H.spanningCoe.edgeSet = H.edgeSet := fun _ => rfl
   rw [symm_diff_edgeset]
   repeat rw [hs]
-  rw [symm_diff_card, aug_path_card h hm]
+  rw [symm_diff_card, aug_path_card h]
   omega
