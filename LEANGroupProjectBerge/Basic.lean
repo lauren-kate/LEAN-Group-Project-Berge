@@ -67,16 +67,16 @@ IsMaximumMatching M -> M.IsMatching := by
 namespace walk
 
 
-theorem IfBerge{M:G.Subgraph}[Fintype V]:
+theorem IfBerge{M:G.Subgraph}[Finite V]:
 ∃ u v: V, ∃ p: G.Walk u v, (p.IsAugmentingPath M) → ¬ IsMaximumMatching M := by
   sorry
 
 
-theorem OnlyIfBerge{M: G.Subgraph}[Fintype V]:
+theorem OnlyIfBerge{M: G.Subgraph}[Finite V]:
 ¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
 sorry
 
-theorem BergesTheorem{M₁ M₂ :G.Subgraph} {h1: M.IsMatching} [Fintype V]:
+theorem BergesTheorem{M₁ M₂ :G.Subgraph} {h1: M.IsMatching} [Finite V]:
 IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
   apply Iff.intro
   · contrapose
@@ -95,20 +95,23 @@ end walk
 
 
 
-lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}
+lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
-∀w' w : V, w'∈p.support ∧ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w' w → w∈p.support := by
-let F:=symmDiff M.spanningCoe p.toSubgraph.spanningCoe
-intro w w' h3
-obtain ⟨h3,h4⟩ := h3
+∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
 sorry
 
-lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}
+lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M):
 ∀x y : V, x ∈ p.support → y ∉ p.support →
   ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y
 := by
-sorry
+let M':=symmDiff M.spanningCoe p.toSubgraph.spanningCoe
+intro x y h3 h4
+show ¬ M'.Adj x y
+by_cases h5: x ∈ M.support
+· sorry
+· sorry
+
+
 --issue, F is not a matching as there are singelton vertices
---is there a way to drop these already in LEAN or
---should I write this?
+--this has already been made by Oscar thank you
