@@ -113,12 +113,3 @@ theorem matching_symm_diff_dg_lt2 (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatc
           exact matching_contr hm₂ h_anec h₂a.1 h₂c.1
       | inr h₂b =>
         exact matching_contr hm₂ h_aneb h₂a.1 h₂b.1
-
-
-
-
-
-theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
-  ∀c : (symmDiff M₁.spanningCoe M₂.spanningCoe).ConnectedComponent,
-  c.componentAltCycle M₁ ∨ c.componentAltPath M₁ := by
-    sorry

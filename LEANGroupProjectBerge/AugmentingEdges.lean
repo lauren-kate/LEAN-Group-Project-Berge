@@ -63,14 +63,6 @@ lemma path_cons_nodup {u v w : V} {F : SimpleGraph V} (h_f : F.Adj u v) (p : F.W
 
 lemma path_single_edgeset {u v w : V} {F : SimpleGraph V} {p : F.Walk w v} (h_eq : w=v) (h_adj : F.Adj u w):
     (Walk.cons h_adj p).IsPath → (Walk.cons h_adj p).toSubgraph.edgeSet = {s(u,w)} := by
-  intro h
-  let p' : F.Walk w w := p.copy rfl (Eq.symm h_eq)
-  have h_ppath: p.IsPath := h.of_cons
-  have : p'.IsPath := (p.isPath_copy rfl (Eq.symm h_eq)).mpr h_ppath
-  have : p'.edges = p.edges := by aesop
-  have : p' = Walk.nil := by aesop
-  have : p.edges = [] :=  by aesop
-  have : (Walk.cons h_adj p).edges = [s(u,v)] := by aesop
   aesop
 
 
