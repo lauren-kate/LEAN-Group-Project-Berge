@@ -4,6 +4,7 @@ import Mathlib.Combinatorics.SimpleGraph.Matching
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 import LEANGroupProjectBerge.Basic
+import LEANGroupProjectBerge.MatchingDiff
 
 namespace SimpleGraph
 
@@ -17,8 +18,8 @@ variable {M₂ : G.Subgraph}
 
 
 
-theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent):
-    (∃v : V, v ∈ c.supp ∧ (F.neighborSet v).encard = 0) → c.componentAltPath M₁ := by
+theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph):
+    (∃v : V, v ∈ c.supp ∧ (F.neighborSet v).encard = 0) → c.componentAltPath M := by
   intro h
   obtain ⟨v, ⟨h_vc, h_dv0⟩⟩ := h
   let P : F.Walk v v := Walk.nil
@@ -48,8 +49,18 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent):
 
 
 
-
 theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
   ∀c : (symmDiff M₁.spanningCoe M₂.spanningCoe).ConnectedComponent,
   c.componentAltCycle M₁ ∨ c.componentAltPath M₁ := by
-    sorry
+    intro c
+    let F := symmDiff M₁.spanningCoe M₂.spanningCoe
+    change F.ConnectedComponent at c
+    cases em (∀v:V, v ∈ c.supp → (F.neighborSet v).encard > 0) with
+    | inr h_ex_v0 =>
+      obtain ⟨ v, h_v0 ⟩ := not_forall.mp h_ex_v0
+      obtain ⟨ h_vc, h_v0⟩  := Classical.not_imp.mp h_v0
+      have : (F.neighborSet v).encard = 0 := by simp_all only [gt_iff_lt, not_lt, nonpos_iff_eq_zero]
+      right
+      exact deg_zero_isolated c M₁ ⟨v, h_vc, this⟩
+    | inl h =>
+      sorry
