@@ -60,10 +60,6 @@ IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmenting M:=
   sorry
 
 
-lemma symmDiffIsMatching (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmenting M): (symmDiff M p.toSubgraph).IsMatching :=
-sorry
 
 
-lemma outsidePath (M M':G.Subgraph) (u v:V) (p : G.Walk u v) (h1:M.IsMatching) (h2: p.IsAugmenting M) (h3 : M' = (symmDiff M p.toSubgraph) ) : ∀ v w:V, M.Adj v w :=
-sorry
 end walk
