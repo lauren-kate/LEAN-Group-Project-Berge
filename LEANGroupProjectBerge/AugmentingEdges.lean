@@ -188,7 +188,7 @@ lemma aug_path_card [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmentingPat
 
 
 lemma symm_diff_edgeset (G' : SimpleGraph V) : (symmDiff G G').edgeSet = symmDiff G.edgeSet G'.edgeSet :=
-  Set.ext (Sym2.ind (fun _ _ => Set.mem_def))
+  Set.ext (Sym2.ind (fun _ _ => Iff.rfl))
 
 
 

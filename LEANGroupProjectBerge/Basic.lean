@@ -79,11 +79,46 @@ end Subgraph
 
 namespace ConnectedComponent
 
+
+-- adjacency and edge set of connected components
+def Adj {F : SimpleGraph V} (c : F.ConnectedComponent) (u v : V) : Prop :=
+  u ∈ c.supp ∧ v ∈ c.supp ∧ F.Adj u v
+
+
+theorem component_adj_symm {F : SimpleGraph V} (c : F.ConnectedComponent) : Symmetric c.Adj := by
+  intros x y h
+  obtain ⟨ h_xc, h_yc, h_f ⟩ := h
+  exact ⟨ h_yc, h_xc , F.adj_symm h_f⟩
+
+
+def edgeSet {F : SimpleGraph V} (c : F.ConnectedComponent) : Set (Sym2 V) :=
+  Sym2.fromRel c.component_adj_symm
+
+
+
+-- whether a component is equivalent to a alternating path or cycle
 def componentAltCycle {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+  ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧
+   ∀x: V, x ∈ c.supp ↔ x ∈ p.support ∧
+   ∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges
 
 
 def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧ ∀x:V, x ∈ c.supp → x ∈ p.support
+  ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧
+   ∀x: V, x ∈ c.supp ↔ x ∈ p.support ∧
+   ∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges
+
+
+
+-- useful lemmas
+theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedComponent) (p : F.Walk u v) :
+  F.connectedComponentMk u = c → w ∈ p.support → w ∈ c.supp := by
+  sorry
+
+
+theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (p : F.Walk u v) (e : Sym2 V) :
+  F.connectedComponentMk u = c → e ∈ p.edges → e ∈ c.edgeSet := by
+  sorry
+
 
 end ConnectedComponent
