@@ -22,6 +22,7 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
     (∃v : V, v ∈ c.supp ∧ (F.neighborSet v).encard = 0) → c.componentAltPath M := by
   intro h
   obtain ⟨v, ⟨h_vc, h_dv0⟩⟩ := h
+  replace h_dv0 : F.neighborSet v = ∅ := Set.encard_eq_zero.mp h_dv0
   let P : F.Walk v v := Walk.nil
   exists v, v, P
   constructor
@@ -31,22 +32,24 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
     support_nodup := h_p.support_nodup
     alternates := by aesop }
   constructor
-  · sorry
-  · sorry
-    --intro x h_xc
-    --replace h_dv0 : F.neighborSet v = ∅ := Set.encard_eq_zero.mp h_dv0
-    --have : F.Reachable v x := by
-    --  simp_all only [ConnectedComponent.mem_supp_iff]
-    --  subst h_xc
-    --  simp_all only [ConnectedComponent.eq]
-    --apply Nonempty.elim this
-    --intro Q
-    --cases Q with
-    --| nil => exact Walk.mem_support_nil_iff.mpr rfl
-    --| cons h Q' =>
-    --  rename_i w
-    --  have : w ∈ F.neighborSet v := h
-    --  simp_all only [Set.mem_empty_iff_false]
+  · intro x
+    apply Iff.intro
+    · intro h_xc
+      have : v ∈ P.support := by aesop
+      exact (c.single_vertex h_vc h_dv0 x h_xc) ▸ this
+    · intro h
+      exact c.walk_vertex_supp P (by aesop) h
+  · intro e
+    apply Iff.intro
+    · revert e
+      apply Sym2.ind
+      intro x y h
+      have : x = v := (c.single_vertex h_vc h_dv0 x h.left)
+      have : y = x := this ▸ (c.single_vertex h_vc h_dv0 y h.2.1)
+      exact False.elim <| (F.loopless y) (this ▸ h.2.2)
+    · intro h
+      exact c.walk_edge_supp P e (by aesop) h
+
 
 
 

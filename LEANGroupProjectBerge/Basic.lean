@@ -135,7 +135,7 @@ def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgr
 
 -- useful lemmas
 theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedComponent) (p : F.Walk u v) :
-  F.connectedComponentMk v = c → w ∈ p.support → w ∈ c.supp := by
+    F.connectedComponentMk v = c → w ∈ p.support → w ∈ c.supp := by
   intros h_c_eq h_wp
   subst h_c_eq
   simp_all only [mem_supp_iff, ConnectedComponent.eq]
@@ -144,7 +144,7 @@ theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedCompone
 
 
 theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (p : F.Walk u v) (e : Sym2 V) :
-  F.connectedComponentMk v = c → e ∈ p.edges → e ∈ c.edgeSet := by
+    F.connectedComponentMk v = c → e ∈ p.edges → e ∈ c.edgeSet := by
   revert e
   apply Sym2.ind
   intro x y h_c_eq h_ep
@@ -156,6 +156,23 @@ theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (
   · have : y ∈ p.support := Walk.fst_mem_support_of_mem_edges p (Sym2.eq_swap ▸ h_ep)
     exact c.walk_vertex_supp p h_c_eq this
   · exact Walk.adj_of_mem_edges p h_ep
+
+
+
+theorem single_vertex {F : SimpleGraph V} (c : F.ConnectedComponent) {x : V} (h : x ∈ c.supp) :
+    F.neighborSet x = ∅ → ∀y : V, y ∈ c.supp → y = x := by
+  intro h_nset y h_yc
+  have : F.connectedComponentMk x = F.connectedComponentMk y := by aesop
+  have : F.Reachable x y := ConnectedComponent.exact this
+  apply Nonempty.elim this
+  intro p
+  cases p with
+  | nil => rfl
+  | cons h q =>
+    rename V => z
+    have h_neighbor := (F.mem_neighborSet x z).mpr h
+    apply False.elim <| Set.mem_def.mp <| h_nset ▸ h_neighbor
+
 
 
 end ConnectedComponent
