@@ -3,7 +3,7 @@ Copyright (c) 2024 Joe Cool. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Joe Cool
 -/
-
+import Mathlib.Tactic.Common
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
@@ -67,23 +67,23 @@ IsMaximumMatching M -> M.IsMatching := by
 namespace walk
 
 
-theorem IfBerge{M:G.Subgraph}[Finite V]:
+theorem IfBerge{M:G.Subgraph}{h1: M.IsMatching}[Finite V]:
 ∃ u v: V, ∃ p: G.Walk u v, (p.IsAugmentingPath M) → ¬ IsMaximumMatching M := by
   sorry
 
 
-theorem OnlyIfBerge{M: G.Subgraph}[Finite V]:
+theorem OnlyIfBerge{M: G.Subgraph}{h1: M.IsMatching}[Finite V]:
 ¬IsMaximumMatching M → ∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
 sorry
 
-theorem BergesTheorem{M₁ M₂ :G.Subgraph} {h1: M.IsMatching} [Finite V]:
+theorem BergesTheorem{M:G.Subgraph} {h1: M.IsMatching} [Finite V]:
 IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M := by
   apply Iff.intro
   · contrapose
     intro a
     simp_all only [not_exists, not_forall, not_not]
     revert a
-    sorry
+    exact IfBerge
   · contrapose
     intro a
     simp_all only [not_exists, not_forall, not_not]
@@ -100,6 +100,35 @@ lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 ∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
 sorry
 
+
+lemma EndsAugPathMeansNotInM {M :G.Subgraph}{p: G.Walk u v}
+(h2: p.IsAugmentingPath M):
+∀x ∈ p.support,(x=u ∨ x = v) → x ∉ M.support:= by
+intro x hp
+· intro huv
+  cases huv with
+  | inl h =>
+    subst x
+    exact h2.ends_unsaturated.right.left
+  | inr h =>
+    subst x
+    exact h2.ends_unsaturated.right.right
+
+
+
+
+lemma AlongAugPathButNotInM {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M):
+∀ x ∈ p.support, x ∉ M.support → (x=u ∨ x = v):= by
+intro x hp hM
+
+--lemma EdgeFromEitherPathOrMatching {x y : V}{M :G.Subgraph}{p: G.Walk u v}[Finite V]
+--(h1: M.IsMatching)(h2: p.IsAugmentingPath M)
+--(h3:(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y ):
+--(M.Adj x y ∧ ¬p.toSubgraph.Adj x y) ∨ (¬ M.Adj x y ∧ p.toSubgraph.Adj x y):= by
+--sorry
+
+
 lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M):
 ∀x y : V, x ∈ p.support → y ∉ p.support →
@@ -111,6 +140,11 @@ show ¬ M'.Adj x y
 by_cases h5: x ∈ M.support
 · sorry
 · sorry
+  -- if there exists and edge it must come from either p or M
+  --if comes from M, this is a contradiction of p is an augmenting path (ends not unsaturated)
+  --if comes from p this is a contradiction of p being a path, because there would be a
+  --repeated vertice
+
 
 
 --issue, F is not a matching as there are singelton vertices
