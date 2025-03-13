@@ -53,13 +53,11 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
   ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
 
 
+-- This should go in another file
+--theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
+--  sorry
 
-namespace walk
 
-theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
-  sorry
-
-end walk
 
 
 namespace Subgraph
@@ -77,6 +75,31 @@ end Subgraph
 
 
 
+namespace Walk
+
+
+theorem support_vertex_walk {F : SimpleGraph V} {u v w : V} (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
+  induction p with
+  | nil =>
+    intro h
+    rename_i u
+    have : w=u :=by aesop
+    rw [this]
+    exact Nonempty.intro Walk.nil
+  | cons h_adj q ih =>
+    rename_i u w' v
+    if h : w=u then
+      subst h
+      exact fun _ => Nonempty.intro (Walk.cons h_adj q)
+    else
+      intro a
+      simp_all only [Walk.support_cons, List.mem_cons, false_or]
+
+
+end Walk
+
+
+
 namespace ConnectedComponent
 
 
@@ -88,7 +111,7 @@ def Adj {F : SimpleGraph V} (c : F.ConnectedComponent) (u v : V) : Prop :=
 theorem component_adj_symm {F : SimpleGraph V} (c : F.ConnectedComponent) : Symmetric c.Adj := by
   intros x y h
   obtain ⟨ h_xc, h_yc, h_f ⟩ := h
-  exact ⟨ h_yc, h_xc , F.adj_symm h_f⟩
+  exact ⟨ h_yc, h_xc , F.adj_symm h_f ⟩
 
 
 def edgeSet {F : SimpleGraph V} (c : F.ConnectedComponent) : Set (Sym2 V) :=
@@ -112,13 +135,27 @@ def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgr
 
 -- useful lemmas
 theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedComponent) (p : F.Walk u v) :
-  F.connectedComponentMk u = c → w ∈ p.support → w ∈ c.supp := by
-  sorry
+  F.connectedComponentMk v = c → w ∈ p.support → w ∈ c.supp := by
+  intros h_c_eq h_wp
+  subst h_c_eq
+  simp_all only [mem_supp_iff, ConnectedComponent.eq]
+  exact p.support_vertex_walk h_wp
+
 
 
 theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (p : F.Walk u v) (e : Sym2 V) :
-  F.connectedComponentMk u = c → e ∈ p.edges → e ∈ c.edgeSet := by
-  sorry
+  F.connectedComponentMk v = c → e ∈ p.edges → e ∈ c.edgeSet := by
+  revert e
+  apply Sym2.ind
+  intro x y h_c_eq h_ep
+  show c.Adj x y
+  constructor
+  · have : x ∈ p.support := Walk.fst_mem_support_of_mem_edges p h_ep
+    exact c.walk_vertex_supp  p h_c_eq this
+  constructor
+  · have : y ∈ p.support := Walk.fst_mem_support_of_mem_edges p (Sym2.eq_swap ▸ h_ep)
+    exact c.walk_vertex_supp p h_c_eq this
+  · exact Walk.adj_of_mem_edges p h_ep
 
 
 end ConnectedComponent
