@@ -30,6 +30,8 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
     edges_nodup := h_p.edges_nodup
     support_nodup := h_p.support_nodup
     alternates := by aesop }
+  constructor
+  · sorry
   · sorry
     --intro x h_xc
     --replace h_dv0 : F.neighborSet v = ∅ := Set.encard_eq_zero.mp h_dv0

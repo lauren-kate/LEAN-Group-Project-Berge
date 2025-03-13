@@ -122,14 +122,14 @@ def edgeSet {F : SimpleGraph V} (c : F.ConnectedComponent) : Set (Sym2 V) :=
 -- whether a component is equivalent to a alternating path or cycle
 def componentAltCycle {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
   ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧
-   ∀x: V, x ∈ c.supp ↔ x ∈ p.support ∧
-   ∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges
+   (∀x: V, x ∈ c.supp ↔ x ∈ p.support) ∧
+   (∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges)
 
 
 def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
   ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧
-   ∀x: V, x ∈ c.supp ↔ x ∈ p.support ∧
-   ∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges
+   (∀x: V, x ∈ c.supp ↔ x ∈ p.support) ∧
+   (∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges)
 
 
 
