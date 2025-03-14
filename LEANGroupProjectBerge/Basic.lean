@@ -16,69 +16,36 @@ namespace SimpleGraph
 universe u
 variable {V : Type u}
 variable {G : SimpleGraph V}
+variable {F : SimpleGraph V}
 variable {M : G.Subgraph}
-variable {u v w: V}
+variable {u v w x : V}
+
 
 
 namespace Walk
 
-structure IsAlternatingCycle {F : SimpleGraph V} {u : V} (p : F.Walk u u) (M : G.Subgraph) extends p.IsCycle : Prop where
+
+structure IsAlternatingCycle (p : F.Walk u u) (M : G.Subgraph) extends p.IsCycle : Prop where
   alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
 
-structure IsAlternatingPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
+structure IsAlternatingPath (p : F.Walk u v) (M : G.Subgraph) extends p.IsPath : Prop where
   alternates : ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y)
 
-structure IsAugmentingPath {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (M : G.Subgraph) extends p.IsAlternatingPath M : Prop where
+structure IsAugmentingPath (p : F.Walk u v) (M : G.Subgraph) extends p.IsAlternatingPath M : Prop where
   ends_unsaturated : u≠v ∧ u ∉ M.support ∧ v ∉ M.support
 
-end Walk
 
 
--- as a subtype
-namespace Subgraph
+def vertexSet (p : F.Walk u v) : Set V :=
+  {v : V | v ∈ p.support}
 
-def augPath {G : SimpleGraph V} (M : G.Subgraph) (u v : V) : Type u :=
-  {w : G.Walk u v // w.IsAugmentingPath M}
-
-end Subgraph
-
-
---Added maximal matching for completeness' sake with maximum matchings (maximum and maximal go hand in hand I feel) - we dont need for Berge's
-def IsMaximalMatching (M : G.Subgraph): Prop :=
-  M.IsMatching ∧
-  (¬∃ v w, v ∉ M.support ∧ w ∉ M.support ∧ G.Adj v w)
-
-def IsMaximumMatching (M : G.Subgraph): Prop :=
-  M.IsMatching
-  ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
-
-
--- This should go in another file
---theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
---  sorry
+def edgeSet (p : F.Walk u v) : Set (Sym2 V) :=
+  {e : Sym2 V | e ∈ p.edges}
 
 
 
-
-namespace Subgraph
-
---Use this to delete unsaturated vertices to get IsMatching for a subgraph
-def saturatedSubgraph (M : G.Subgraph) : G.Subgraph where
-  verts := M.support;
-  Adj := M.Adj;
-  adj_sub := M.adj_sub;
-  edge_vert := fun h => M.mem_support.mpr ⟨_, h⟩ ;
-  symm := M.symm;
-
-end Subgraph
-
-
-
-
-namespace Walk
-
-
-theorem support_vertex_walk {F : SimpleGraph V} {u v w : V} (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
+-- can be used to provide a walk between an intermediary vertex and the end vertex
+theorem support_vertex_walk (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
   induction p with
   | nil =>
     intro h
@@ -100,41 +67,103 @@ end Walk
 
 
 
+namespace Subgraph
+
+
+-- i think we can get rid of this
+-- as a subtype
+def augPath (M : G.Subgraph) (u v : V) : Type u :=
+  {w : G.Walk u v // w.IsAugmentingPath M}
+
+
+
+--Added maximal matching for completeness' sake with maximum matchings (maximum and maximal go hand in hand I feel) - we dont need for Berge's
+def IsMaximalMatching (M : G.Subgraph): Prop :=
+  M.IsMatching ∧
+  (¬∃ v w, v ∉ M.support ∧ w ∉ M.support ∧ G.Adj v w)
+
+def IsMaximumMatching (M : G.Subgraph): Prop :=
+  M.IsMatching
+  ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
+
+
+-- This should go in another file
+--theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
+--  sorry
+
+
+
+--Use this to delete unsaturated vertices to get IsMatching for a subgraph
+def saturatedSubgraph (M : G.Subgraph) : G.Subgraph where
+  verts := M.support;
+  Adj := M.Adj;
+  adj_sub := M.adj_sub;
+  edge_vert := fun h => M.mem_support.mpr ⟨_, h⟩ ;
+  symm := M.symm;
+
+
+end Subgraph
+
+
+
+
 namespace ConnectedComponent
 
 
 -- adjacency and edge set of connected components
-def Adj {F : SimpleGraph V} (c : F.ConnectedComponent) (u v : V) : Prop :=
+def Adj (c : F.ConnectedComponent) (u v : V) : Prop :=
   u ∈ c.supp ∧ v ∈ c.supp ∧ F.Adj u v
 
 
-theorem component_adj_symm {F : SimpleGraph V} (c : F.ConnectedComponent) : Symmetric c.Adj := by
+theorem component_adj_symm (c : F.ConnectedComponent) : Symmetric c.Adj := by
   intros x y h
   obtain ⟨ h_xc, h_yc, h_f ⟩ := h
   exact ⟨ h_yc, h_xc , F.adj_symm h_f ⟩
 
 
-def edgeSet {F : SimpleGraph V} (c : F.ConnectedComponent) : Set (Sym2 V) :=
+def edgeSet (c : F.ConnectedComponent) : Set (Sym2 V) :=
   Sym2.fromRel c.component_adj_symm
 
 
+end ConnectedComponent
+
+
+
+
+namespace Walk
+
+
+structure IsAltCycleComponent (p : F.Walk u u) (M : G.Subgraph) (c : F.ConnectedComponent) extends p.IsAlternatingCycle M : Prop where
+  vertices_eq : c.supp = p.vertexSet
+  edges_eq : c.edgeSet = p.edgeSet
+
+
+structure IsAltPathComponent (p : F.Walk u v) (M : G.Subgraph) (c : F.ConnectedComponent) extends p.IsAlternatingPath M : Prop where
+  vertices_eq : c.supp = p.vertexSet
+  edges_eq : c.edgeSet = p.edgeSet
+
+
+end Walk
+
+
+
+
+
+namespace ConnectedComponent
+
 
 -- whether a component is equivalent to a alternating path or cycle
-def componentAltCycle {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u : V) (p : F.Walk u u), p.IsAlternatingCycle M ∧
-   (∀x: V, x ∈ c.supp ↔ x ∈ p.support) ∧
-   (∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges)
+def componentAltCycle (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
+  ∃ (u : V) (p : F.Walk u u), p.IsAltCycleComponent M c
 
 
-def componentAltPath {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
-  ∃ (u v : V) (p : F.Walk u v), p.IsAlternatingPath M ∧
-   (∀x: V, x ∈ c.supp ↔ x ∈ p.support) ∧
-   (∀e: Sym2 V, e ∈ c.edgeSet ↔ e ∈ p.edges)
+def componentAltPath (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
+  ∃ (u v : V) (p : F.Walk u v), p.IsAltPathComponent M c
 
 
 
--- useful lemmas
-theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedComponent) (p : F.Walk u v) :
+-- any vertex in a walk is in the same component as the end of the walk
+theorem walk_vertex_supp (c : F.ConnectedComponent) (p : F.Walk u v) :
     F.connectedComponentMk v = c → w ∈ p.support → w ∈ c.supp := by
   intros h_c_eq h_wp
   subst h_c_eq
@@ -142,8 +171,8 @@ theorem walk_vertex_supp {F : SimpleGraph V} {u v w : V} (c : F.ConnectedCompone
   exact p.support_vertex_walk h_wp
 
 
-
-theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (p : F.Walk u v) (e : Sym2 V) :
+-- any edge in a walk is in the edge set of the component containing the end of the walk
+theorem walk_edge_supp (c : F.ConnectedComponent) (p : F.Walk u v) (e : Sym2 V) :
     F.connectedComponentMk v = c → e ∈ p.edges → e ∈ c.edgeSet := by
   revert e
   apply Sym2.ind
@@ -158,8 +187,8 @@ theorem walk_edge_supp {F : SimpleGraph V} {u v: V} (c : F.ConnectedComponent) (
   · exact Walk.adj_of_mem_edges p h_ep
 
 
-
-theorem single_vertex {F : SimpleGraph V} (c : F.ConnectedComponent) {x : V} (h : x ∈ c.supp) :
+-- if a vertex x has no neighbours, all the vertices in x's component are equal to x
+theorem single_vertex (c : F.ConnectedComponent) (h : x ∈ c.supp) :
     F.neighborSet x = ∅ → ∀y : V, y ∈ c.supp → y = x := by
   intro h_nset y h_yc
   have : F.connectedComponentMk x = F.connectedComponentMk y := by aesop
