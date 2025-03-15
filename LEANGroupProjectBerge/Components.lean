@@ -148,13 +148,34 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
     contradiction
   | succ k  =>
     intro x h_x_inc h_x_deg1
-    if h_k : k<2 then
+    if h_k : k<2 then --BASE CASE (two vertices)
       replace h_k : k=1 := by omega
       subst h_k; simp at h_neq; clear h_n2
-      sorry --base case (two vertices)
-    else
+      sorry
+    else --INDUCTIVE STEP
       have ih := deg_one_two_path k
-      sorry --inductive step
+      obtain ⟨x', h_adj_xx', h_x'_uq⟩ := (one_neighbour_iff x).mp h_x_deg1
+      have h_x'_gd2 : (G.neighborSet x').encard=2 := by sorry
+
+      let H : SimpleGraph V := G.deleteEdges {s(x,x')}
+      have h_x'_hd1 : (H.neighborSet x').encard=1 := by sorry
+
+      let D : H.ConnectedComponent := H.connectedComponentMk x'
+      have h_D_supp : D.supp = C.supp \ {x} := by sorry
+      have h_Dk : k = D.supp.ncard := by sorry
+      have h_D_d12 : DegOneOrTwo D := by sorry
+
+      specialize ih H D h_Dk (by omega) h_D_d12 x' rfl h_x'_hd1
+      obtain ⟨y, h_yD, h_yx_ne, h_y_hd1, Q, h_q_path, h_Eqd, h_Vqd⟩ := ih
+      have h_y_gd1 : (G.neighborSet y).encard = 1 := by sorry
+
+      let Qg : G.Walk x' y := Q.transfer G sorry
+      let P : G.Walk x y := Walk.cons h_adj_xx' Qg
+      have h_p_path : P.IsPath := by sorry
+      have h_Epc : P.edgeSet = C.edgeSet := by sorry
+      have h_Vpc : P.vertexSet = C.supp := by sorry
+
+      exact ⟨y, by aesop, by aesop, h_y_gd1, P, h_p_path, h_Epc, h_Vpc⟩
 
 
 
