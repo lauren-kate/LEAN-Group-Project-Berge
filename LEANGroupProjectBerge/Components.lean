@@ -137,6 +137,100 @@ def DegOneOrTwo (c : G.ConnectedComponent) : Prop :=
 
 
 
+-- this theorem handles the base case of the inductive proof below
+theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
+    ∀x ∈ C.supp, (G.neighborSet x).encard = 1 →
+    ∃y ∈ C.supp, y≠ x ∧ (G.neighborSet y).encard = 1 ∧
+    ∃P : G.Walk x y, P.IsPath ∧ P.edgeSet = C.edgeSet ∧ P.vertexSet = C.supp := by
+  intro x h_xc h_x_d1
+  obtain ⟨ y, h_adj_xy, h_y_uq ⟩ := (one_neighbour_iff x).mp h_x_d1
+  have h_yc : y ∈ C.supp := have := ConnectedComponent.connectedComponentMk_eq_of_adj h_adj_xy; by aesop
+  exists y
+  constructor; exact h_yc
+  constructor; aesop
+
+  rw[propext (one_neighbour_iff y)]
+  have h_yadj_uq : ExistsUnique (G.Adj y) := by
+    exists x
+    constructor
+    exact h_adj_xy.symm
+    intro x' h_yx'
+    by_contra h_ne
+    have h_x'c : x' ∈ C.supp := have := ConnectedComponent.connectedComponentMk_eq_of_adj h_yx'; by aesop
+    have h_c_fin : C.supp.Finite := by
+      have : C.supp.ncard ≠ 0 := by aesop
+      exact Set.finite_of_ncard_ne_zero this
+    have : 2 < C.supp.ncard := (Set.two_lt_ncard h_c_fin).mpr ⟨ x, h_xc, y, h_yc, x', h_x'c, by aesop, Ne.symm h_ne, by aesop ⟩
+    have : C.supp.ncard ≠ 2 := by omega
+    contradiction
+  constructor; exact h_yadj_uq
+
+  let P : G.Walk x y := Walk.cons h_adj_xy Walk.nil
+  exists P
+  have h_p_path : P.IsPath := by
+    constructor; constructor
+    · aesop
+    · have : x≠y := Adj.ne' h_adj_xy.symm
+      aesop
+
+  have h_Vpc : P.vertexSet = C.supp := by
+    apply Set.ext
+    intro v
+    apply Iff.intro
+    · intro h
+      have : v=x ∨ v=y := by change v ∈ [x,y] at h; aesop
+      cases this with
+      | inr h => exact h ▸ h_yc
+      | inl h => exact h ▸ h_xc
+    · intro h
+      sorry
+
+  have h_Epc : P.edgeSet = C.edgeSet := by
+      apply Set.ext
+      intro e
+      apply Iff.intro
+      · revert e
+        apply Sym2.ind
+        intro u v h
+        change s(u,v) ∈ [s(x,y)] at h
+        have :s(u,v)=s(x,y) := by aesop
+        rw [this]
+        apply Set.mem_def.mpr
+        show x ∈ C.supp ∧ y ∈ C.supp ∧ G.Adj x y
+        aesop
+      · revert e
+        apply Sym2.ind
+        intro u v h
+        change u ∈ C.supp ∧ v ∈ C.supp ∧ G.Adj u v at h
+        rw [←h_Vpc] at h
+        change u ∈ [x,y] ∧ v ∈ [x,y] ∧ G.Adj u v at h
+        have h_u_xy: u=x ∨ u=y := by aesop
+        cases h_u_xy with
+        | inl h_ux =>
+          have h_vy : v=y := by aesop
+          rw [h_vy, h_ux]
+          show s(x,y) ∈ P.edges
+          aesop
+        | inr h_uy =>
+          have h_vx : v=x := by aesop
+          rw [h_vx, h_uy]
+          show s(y,x) ∈ P.edges
+          aesop
+
+  exact ⟨ h_p_path, h_Epc, h_Vpc⟩
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- if a component only has vertices of deg 1 or 2, and at least one has deg 1, then another vertex has deg 1
 -- and there is a path between these two vertices which contains the whole component
 theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent) (h_neq : n=C.supp.ncard) (h_n2 : n≥2) (h_d : DegOneOrTwo C) :
@@ -151,7 +245,7 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
     if h_k : k<2 then --BASE CASE (two vertices)
       replace h_k : k=1 := by omega
       subst h_k; simp at h_neq; clear h_n2
-      sorry
+      exact comp_vertex_pair C h_neq.symm x h_x_inc h_x_deg1
     else --INDUCTIVE STEP
       have ih := deg_one_two_path k
       obtain ⟨x', h_adj_xx', h_x'_uq⟩ := (one_neighbour_iff x).mp h_x_deg1
