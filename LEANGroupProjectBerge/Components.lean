@@ -70,25 +70,61 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
 
 
 
-
+-- quality of life lemmas for dealing with vertices of degree 1 and 2
 
 theorem one_neighbour_iff {F : SimpleGraph V} (v : V) : (F.neighborSet v).encard=1 ↔ ExistsUnique (F.Adj v) := by
-  sorry
+  constructor
+  · intro h
+    obtain ⟨ w, h_w⟩  : ∃w : V, (F.neighborSet v)={w} := Set.encard_eq_one.mp h
+    exists w
+    constructor
+    · show w ∈ F.neighborSet v
+      aesop
+    · intro y h_y
+      change y ∈ F.neighborSet v at h_y
+      aesop
+  · intro h
+    obtain ⟨w, h_w⟩ := h
+    have : {w} = F.neighborSet v := by aesop
+    rw [←this]
+    exact Set.encard_singleton w
+
 
 
 def ExistsTwo {α : Sort u} (p : α → Prop) : Prop :=
-  ∃a b:α, a≠b ∧ ∀c:α, p c → c=a ∨ c=b
+  ∃a b:α, a≠b ∧ p a ∧ p b ∧ ∀c:α, p c → c=a ∨ c=b
 
 
 theorem two_neighbours_iff {F : SimpleGraph V} (v : V) : (F.neighborSet v).encard=2 ↔ ExistsTwo (F.Adj v) := by
-  sorry
+  constructor
+  · intro h
+    obtain ⟨ w, x, h_wx, h⟩ := Set.encard_eq_two.mp h
+    exists w, x
+    constructor; exact h_wx
+    constructor; show w ∈ (F.neighborSet v); aesop
+    constructor; show x ∈ (F.neighborSet v); aesop
+    intro y h_y
+    change y ∈ F.neighborSet v at h_y
+    aesop
+  · intro h
+    obtain ⟨ w,x, h_wx, h_eq⟩ := h
+    have : {w, x} = F.neighborSet v := by aesop
+    rw [←this]
+    exact Set.encard_pair h_wx
 
 
-theorem comp_edge_supp_gt2 (C : G.ConnectedComponent) : (∃x y, x ∈ C.supp ∧ G.Adj x y) → C.supp.ncard ≥ 2 := by
-  sorry
+
+theorem comp_edge_supp_gt2 [Finite V] (C : G.ConnectedComponent) : (∃x y, x ∈ C.supp ∧ G.Adj x y) → C.supp.ncard ≥ 2 := by
+  intro h
+  obtain ⟨ x, y, h_xc, h_adj_xy⟩ := h
+  have h_yc : y ∈ C.supp := by
+    have : G.Reachable y x := Nonempty.intro (Walk.cons h_adj_xy.symm Walk.nil)
+    aesop
+  exact (Set.one_lt_ncard_iff).mpr ⟨x, y, h_xc, h_yc, by aesop⟩
 
 
-theorem comp_deg1_supp_gt2 (C : G.ConnectedComponent) (x : V) : x ∈ C.supp → (G.neighborSet x).encard=1 → C.supp.ncard ≥ 2 := by
+
+theorem comp_deg1_supp_gt2 [Finite V] (C : G.ConnectedComponent) (x : V) : x ∈ C.supp → (G.neighborSet x).encard=1 → C.supp.ncard ≥ 2 := by
   intro h_xc h_xd1
   obtain ⟨ y, h ⟩ : ExistsUnique <| G.Adj x := (one_neighbour_iff x).mp h_xd1
   exact comp_edge_supp_gt2 C ⟨x , y, h_xc, h.1⟩
@@ -123,7 +159,7 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
 
 
 
-theorem deg_two_cycle (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
+theorem deg_two_cycle [Finite V] (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
     ∃ (x : V) (P : G.Walk x x), P.IsCycle ∧ P.edgeSet=C.edgeSet ∧ P.vertexSet=C.supp := by
   obtain ⟨x, y, h_xc, h_yc, h_adj_xy ⟩ : ∃x y, x ∈ C.supp ∧ y ∈ C.supp ∧ G.Adj x y := by
     sorry
@@ -152,7 +188,7 @@ theorem deg_two_cycle (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.supp, (G.nei
 
 
 -- dumb as fuck
-theorem nat_one_or_two (n : ENat) (h : n > 0 ∧ n ≤ 2) : n=1 ∨ n=2 := by
+theorem enat_one_or_two (n : ENat) (h : n > 0 ∧ n ≤ 2) : n=1 ∨ n=2 := by
   cases n with
   | top => contradiction
   | coe n' =>
@@ -168,7 +204,7 @@ theorem nat_one_or_two (n : ENat) (h : n > 0 ∧ n ≤ 2) : n=1 ∨ n=2 := by
 
 
 -- every component of the symmetric difference of two matchings is an alternating path (includes isolated vertices) or alternating cycle
-theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
+theorem matching_symm_diff_alt_paths_cycles [Finite V] (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
   ∀c : (symmDiff M₁.spanningCoe M₂.spanningCoe).ConnectedComponent,
   c.componentAltCycle M₁ ∨ c.componentAltPath M₁ := by
     intro c
@@ -198,7 +234,7 @@ theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M
           intro x h_xc
           have : (F.neighborSet x).encard ≤ 2 := matching_symm_diff_dg_lt2 hm₁ hm₂ x
           specialize h x h_xc
-          exact nat_one_or_two (F.neighborSet x).encard ⟨h , this⟩
+          exact enat_one_or_two (F.neighborSet x).encard ⟨h , this⟩
         obtain ⟨x, h_xc, h_x_d1⟩ : ∃x ∈ c.supp, (F.neighborSet x).encard = 1 := by
           obtain ⟨ x, h_x ⟩ := not_forall.mp h_d2
           obtain ⟨ h_xc, h_xdn2⟩ := propext Classical.not_imp ▸ h_x
