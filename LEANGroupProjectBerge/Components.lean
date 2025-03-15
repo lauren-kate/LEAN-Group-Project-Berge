@@ -137,6 +137,24 @@ def DegOneOrTwo (c : G.ConnectedComponent) : Prop :=
 
 
 
+--
+theorem two_vertex_walk (x y v) (p : G.Walk x v) (h : G.Adj x y) : ExistsUnique (G.Adj x) → ExistsUnique (G.Adj y) → v=x ∨ v=y := by
+  intro h_uq_x h_uq_y
+  cases p with
+  | nil =>
+    left; rfl
+  | cons h_adj q =>
+    rename V => w
+    have ih := two_vertex_walk w x v q h_adj.symm
+    have : w=y := by
+      obtain ⟨ y', _, h_y' ⟩ := h_uq_x
+      aesop
+    rw[this] at ih
+    specialize ih h_uq_y h_uq_x
+    aesop
+
+
+
 -- this theorem handles the base case of the inductive proof below
 theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
     ∀x ∈ C.supp, (G.neighborSet x).encard = 1 →
@@ -148,7 +166,6 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
   exists y
   constructor; exact h_yc
   constructor; aesop
-
   rw[propext (one_neighbour_iff y)]
   have h_yadj_uq : ExistsUnique (G.Adj y) := by
     exists x
@@ -164,7 +181,6 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
     have : C.supp.ncard ≠ 2 := by omega
     contradiction
   constructor; exact h_yadj_uq
-
   let P : G.Walk x y := Walk.cons h_adj_xy Walk.nil
   exists P
   have h_p_path : P.IsPath := by
@@ -172,7 +188,6 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
     · aesop
     · have : x≠y := Adj.ne' h_adj_xy.symm
       aesop
-
   have h_Vpc : P.vertexSet = C.supp := by
     apply Set.ext
     intro v
@@ -183,48 +198,44 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
       | inr h => exact h ▸ h_yc
       | inl h => exact h ▸ h_xc
     · intro h
-      sorry
-
+      have : G.Reachable x v := ConnectedComponent.exact <| Eq.trans h_xc h.symm
+      apply Nonempty.elim this
+      intro p
+      have : v=x ∨ v=y := two_vertex_walk x y v p h_adj_xy ((propext (one_neighbour_iff x) ▸ h_x_d1)) h_yadj_uq
+      show v ∈ [x,y]
+      cases this <;> aesop
   have h_Epc : P.edgeSet = C.edgeSet := by
-      apply Set.ext
-      intro e
-      apply Iff.intro
-      · revert e
-        apply Sym2.ind
-        intro u v h
-        change s(u,v) ∈ [s(x,y)] at h
-        have :s(u,v)=s(x,y) := by aesop
-        rw [this]
-        apply Set.mem_def.mpr
-        show x ∈ C.supp ∧ y ∈ C.supp ∧ G.Adj x y
+    apply Set.ext
+    intro e
+    apply Iff.intro
+    · revert e
+      apply Sym2.ind
+      intro u v h
+      change s(u,v) ∈ [s(x,y)] at h
+      have :s(u,v)=s(x,y) := by aesop
+      rw [this]
+      apply Set.mem_def.mpr
+      show x ∈ C.supp ∧ y ∈ C.supp ∧ G.Adj x y
+      aesop
+    · revert e
+      apply Sym2.ind
+      intro u v h
+      change u ∈ C.supp ∧ v ∈ C.supp ∧ G.Adj u v at h
+      rw [←h_Vpc] at h
+      change u ∈ [x,y] ∧ v ∈ [x,y] ∧ G.Adj u v at h
+      have h_u_xy: u=x ∨ u=y := by aesop
+      cases h_u_xy with
+      | inl h_ux =>
+        have h_vy : v=y := by aesop
+        rw [h_vy, h_ux]
+        show s(x,y) ∈ P.edges
         aesop
-      · revert e
-        apply Sym2.ind
-        intro u v h
-        change u ∈ C.supp ∧ v ∈ C.supp ∧ G.Adj u v at h
-        rw [←h_Vpc] at h
-        change u ∈ [x,y] ∧ v ∈ [x,y] ∧ G.Adj u v at h
-        have h_u_xy: u=x ∨ u=y := by aesop
-        cases h_u_xy with
-        | inl h_ux =>
-          have h_vy : v=y := by aesop
-          rw [h_vy, h_ux]
-          show s(x,y) ∈ P.edges
-          aesop
-        | inr h_uy =>
-          have h_vx : v=x := by aesop
-          rw [h_vx, h_uy]
-          show s(y,x) ∈ P.edges
-          aesop
-
+      | inr h_uy =>
+        have h_vx : v=x := by aesop
+        rw [h_vx, h_uy]
+        show s(y,x) ∈ P.edges
+        aesop
   exact ⟨ h_p_path, h_Epc, h_Vpc⟩
-
-
-
-
-
-
-
 
 
 
