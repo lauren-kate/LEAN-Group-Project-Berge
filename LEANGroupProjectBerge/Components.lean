@@ -20,10 +20,20 @@ variable {M₂ : G.Subgraph}
 -- any walk in the symmetric difference of two matchings satisfies the alternating condition
 theorem match_symmdiff_walk_alt (h_m₁ : M₁.IsMatching) (h_m₂ : M₂.IsMatching) {u v : V} (p : (symmDiff M₁.spanningCoe M₂.spanningCoe).Walk u v) :
     ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M₁.Adj w x ↔ ¬M₁.Adj x y) := by
-  sorry
+  let F := symmDiff M₁.spanningCoe M₂.spanningCoe
+  intro w x y h_wy_ne h_p_wx h_p_xy
+  constructor
+  · exact fun h h' => matching_contr h_m₁ h_wy_ne h.symm h'
+  · intro h_nadj_xy
+    have h_fwx : F.Adj w x := p.adj_of_mem_edges h_p_wx
+    have h_fxy : F.Adj x y := p.adj_of_mem_edges h_p_xy
+    have h_m₂xy : M₂.Adj x y := by cases h_fxy <;> aesop
+    cases h_fwx with
+    | inl h => exact h.1
+    | inr h => exact False.elim <| matching_contr h_m₂ h_wy_ne h.1.symm h_m₂xy
 
 
-
+-- a component containing an isolated vertex counts as an M alternating path
 theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.Subgraph):
     (∃v : V, v ∈ c.supp ∧ (F.neighborSet v).encard = 0) → c.componentAltPath M := by
   intro h
@@ -74,6 +84,17 @@ theorem two_neighbours_iff {F : SimpleGraph V} (v : V) : (F.neighborSet v).encar
   sorry
 
 
+theorem comp_edge_supp_gt2 (C : G.ConnectedComponent) : (∃x y, x ∈ C.supp ∧ G.Adj x y) → C.supp.ncard ≥ 2 := by
+  sorry
+
+
+theorem comp_deg1_supp_gt2 (C : G.ConnectedComponent) (x : V) : x ∈ C.supp → (G.neighborSet x).encard=1 → C.supp.ncard ≥ 2 := by
+  intro h_xc h_xd1
+  obtain ⟨ y, h ⟩ : ExistsUnique <| G.Adj x := (one_neighbour_iff x).mp h_xd1
+  exact comp_edge_supp_gt2 C ⟨x , y, h_xc, h.1⟩
+
+
+
 
 def DegOneOrTwo (c : G.ConnectedComponent) : Prop :=
   (∀v ∈ c.supp, (G.neighborSet v).encard=1 ∨ (G.neighborSet v).encard=2)
@@ -104,7 +125,44 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
 
 theorem deg_two_cycle (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
     ∃ (x : V) (P : G.Walk x x), P.IsCycle ∧ P.edgeSet=C.edgeSet ∧ P.vertexSet=C.supp := by
-  sorry
+  obtain ⟨x, y, h_xc, h_yc, h_adj_xy ⟩ : ∃x y, x ∈ C.supp ∧ y ∈ C.supp ∧ G.Adj x y := by
+    sorry
+  let H : SimpleGraph V := G.deleteEdges {s(x,y)}
+  have h_xd1 : (H.neighborSet x).encard = 1 := by sorry
+  have h_yd1 : (H.neighborSet y).encard = 1 := by sorry
+
+  let D : H.ConnectedComponent := H.connectedComponentMk x
+  have h_D_d12 : DegOneOrTwo D := by sorry
+  have h_D_xyd1 : ∀v ∈ D.supp, (H.neighborSet v).encard=1 ↔ (v=x ∨ v=y) := by sorry
+  have h_D2 : D.supp.ncard ≥ 2 := by sorry
+
+  obtain ⟨y', h_y'D, h_y'nx, h_y'd1, P, h_path, h_Epd, h_Vpd ⟩ :=
+    deg_one_two_path D.supp.ncard H D rfl h_D2 h_D_d12 x rfl h_xd1
+
+  have h_y_eq : y=y' := by aesop
+
+  let Pg : G.Walk x y' := P.transfer G sorry
+  let Q : G.Walk y' y' := Walk.cons (h_y_eq ▸ h_adj_xy.symm) Pg
+
+  exists y', Q
+  apply And.intro
+  · sorry
+  · sorry
+
+
+
+-- dumb as fuck
+theorem nat_one_or_two (n : ENat) (h : n > 0 ∧ n ≤ 2) : n=1 ∨ n=2 := by
+  cases n with
+  | top => contradiction
+  | coe n' =>
+    if h1 : n'=1 then
+      aesop
+    else
+      replace h : n'>0 ∧ n'≤2 := by aesop
+      replace h1 : n'≠1 := by aesop
+      have : n'=2 := by omega
+      aesop
 
 
 
@@ -140,11 +198,14 @@ theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M
           intro x h_xc
           have : (F.neighborSet x).encard ≤ 2 := matching_symm_diff_dg_lt2 hm₁ hm₂ x
           specialize h x h_xc
-          sorry
+          exact nat_one_or_two (F.neighborSet x).encard ⟨h , this⟩
         obtain ⟨x, h_xc, h_x_d1⟩ : ∃x ∈ c.supp, (F.neighborSet x).encard = 1 := by
-          sorry
-        have h_c_2 : c.supp.ncard ≥ 2 := by
-          sorry
+          obtain ⟨ x, h_x ⟩ := not_forall.mp h_d2
+          obtain ⟨ h_xc, h_xdn2⟩ := propext Classical.not_imp ▸ h_x
+          exists x
+          specialize h_d12 x h_xc
+          aesop
+        have h_c_2 : c.supp.ncard ≥ 2 := comp_deg1_supp_gt2 c x h_xc h_x_d1
         obtain ⟨y, h_yc, h_ynx, h_yd1, P, h_path, h_Epc, h_Vpc ⟩  :=
           deg_one_two_path c.supp.ncard F c rfl h_c_2 h_d12 x h_xc h_x_d1
         exists x, y, P
