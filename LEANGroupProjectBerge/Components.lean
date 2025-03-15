@@ -31,15 +31,16 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
     edges_nodup := h_p.edges_nodup
     support_nodup := h_p.support_nodup
     alternates := by aesop }
-  constructor
-  · intro x
+  · apply Set.ext
+    intro x
     apply Iff.intro
     · intro h_xc
       have : v ∈ P.support := by aesop
       exact (c.single_vertex h_vc h_dv0 x h_xc) ▸ this
     · intro h
       exact c.walk_vertex_supp P (by aesop) h
-  · intro e
+  · apply Set.ext
+    intro e
     apply Iff.intro
     · revert e
       apply Sym2.ind
@@ -51,6 +52,20 @@ theorem deg_zero_isolated {F : SimpleGraph V} (c : F.ConnectedComponent) (M : G.
       exact c.walk_edge_supp P e (by aesop) h
 
 
+
+
+
+
+theorem one_neighbour {F : SimpleGraph V} (v : V) : (F.neighborSet v).encard=1 ↔ ExistsUnique (F.Adj v) := by
+  sorry
+
+
+def ExistsTwo {α : Sort u} (p : α → Prop) : Prop :=
+  ∃a b:α, a≠b ∧ ∀c:α, p c → c=a ∨ c=b
+
+
+theorem two_neighbours {F : SimpleGraph V} (v : V) : (F.neighborSet v).encard=2 ↔ ExistsTwo (F.Adj v) := by
+  sorry
 
 
 
