@@ -407,7 +407,36 @@ theorem edge_del_comp_edge_union (x y : V) (H : SimpleGraph V) (h_adj_xy : G.Adj
   apply Iff.intro
   · revert e
     apply Sym2.ind
-    sorry
+    intro a b h_ab
+    let C := G.connectedComponentMk x
+    let Dx := H.connectedComponentMk x
+    let Dy := H.connectedComponentMk y
+    change a ∈ C.supp ∧ b ∈ C.supp ∧ G.Adj a b at h_ab
+    obtain ⟨h_ac, h_bc, h_gadj_ab⟩ := h_ab
+    have : C.supp = Dx.supp ∪ Dy.supp := edge_del_comp_supp_union h_adj_xy H h_H
+    rw [this] at h_ac; rw [this] at h_bc
+    if h_ab_n_xy : s(a,b) = s(x,y) then
+      aesop
+    else
+      cases h_ac with
+      | inr h_acy =>
+        cases h_bc with
+        | inr h_bcy => -- A IN Y, B IN Y
+          left; right
+          exact ⟨h_acy, h_bcy, by aesop⟩
+        | inl h_bcx => -- A IN Y, B IN X
+          have : H.Adj a b := by aesop
+          left; left
+          exact ⟨(ConnectedComponent.mem_supp_congr_adj Dx (this.symm)).mp h_bcx, h_bcx, this⟩
+      | inl h_acx =>
+        cases h_bc with
+        | inr h_bcy => -- A IN X, B IN Y
+          have : H.Adj a b := by aesop
+          left; right
+          exact ⟨(ConnectedComponent.mem_supp_congr_adj Dy (this.symm)).mp h_bcy, h_bcy, this⟩
+        | inl h_bcx => -- A IN X, B IN X
+          left; left
+          exact ⟨h_acx, h_bcx, by aesop⟩
   · revert e
     apply Sym2.ind
     intro a b h_ab
