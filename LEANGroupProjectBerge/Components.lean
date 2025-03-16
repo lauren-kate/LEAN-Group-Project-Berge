@@ -155,7 +155,7 @@ theorem two_vertex_walk (x y v) (p : G.Walk x v) (h : G.Adj x y) : ExistsUnique 
 
 
 
--- this theorem handles the base case of the inductive proof below
+-- this theorem handles the base case of the inductive proof further down
 theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
     ∀x ∈ C.supp, (G.neighborSet x).encard = 1 →
     ∃y ∈ C.supp, y≠ x ∧ (G.neighborSet y).encard = 1 ∧
@@ -324,17 +324,40 @@ theorem walk_only_reach_through {x y z : V} : Nonempty (G.Walk z x) → (∀p : 
 
 
 
+-- given that xy is not in p, prove the condition for transferring p to H := G \ xy
+theorem edge_del_walk_transfer {u v x y : V} (p : G.Walk u v) (h_xy : s(x,y) ∉ p.edges) : ∀e ∈ p.edges, e ∈ (G.deleteEdges {s(x,y)}).edgeSet := by
+  apply Sym2.ind
+  intro a b h_e
+  constructor
+  · exact Walk.adj_of_mem_edges p h_e
+  · have : s(a,b)≠s(x,y) := by
+      intro h
+      exact h_xy <| h ▸ h_e
+    aesop
 
 
+
+-- if H = G \ xy, the the vertex set of x's component in G is the union of that of x and y's components in H
 theorem edge_del_comp_supp_union {x y : V} (h_adj_xy : G.Adj x y) (H : SimpleGraph V) (h_H : H=G.deleteEdges {s(x,y)} := by try rfl) :
     (G.connectedComponentMk x).supp = (H.connectedComponentMk x).supp ∪ (H.connectedComponentMk y).supp := by
   apply Set.ext
   intro v
   apply Iff.intro
   · intro h_xc
-
-    sorry
-
+    if h : ∀w : G.Walk x v,  s(x,y) ∈ w.edges then
+      right
+      have : G.Reachable x v := by apply Reachable.symm; aesop
+      rw[Sym2.eq_swap] at h
+      obtain ⟨p, h_p⟩ := walk_only_reach_through this h
+      apply ConnectedComponent.sound
+      exact Nonempty.intro <| (p.transfer H <| h_H ▸ (edge_del_walk_transfer p <| (Sym2.eq_swap ▸ h_p))).reverse
+    else
+      left
+      rw [propext Classical.not_forall] at h
+      obtain ⟨p, h_p_xy⟩ := h
+      have : ∀e ∈ p.edges, e ∈ H.edgeSet := h_H ▸ edge_del_walk_transfer p h_p_xy
+      apply ConnectedComponent.sound
+      exact Nonempty.intro <| (p.transfer H this).reverse
   · intro h_u_xy
     cases h_u_xy with
     | inl h_v_cx =>
@@ -360,10 +383,64 @@ theorem edge_del_comp_supp_union {x y : V} (h_adj_xy : G.Adj x y) (H : SimpleGra
 
 
 
+theorem edge_del_reachable {a b x y : V} (H : SimpleGraph V) (h_H : H=G.deleteEdges {s(x,y)}) :
+    H.Reachable a b → G.Reachable a b := by
+  intro h_hr
+  apply Nonempty.elim h_hr
+  intro p
+  apply Nonempty.intro
+  apply p.transfer G
+  apply Sym2.ind; intro u v h_uvp
+  have : H.Adj u v:= by exact Walk.adj_of_mem_edges p h_uvp
+  aesop
 
 
-theorem edge_del_comp_edge_union (x y : V) (H : SimpleGraph V) (h : H=G.deleteEdges {s(x,y)} := by try rfl) :
-    (G.connectedComponentMk x).edgeSet = (H.connectedComponentMk x).edgeSet ∪ (H.connectedComponentMk y).edgeSet ∪ {s(x,y)} := by sorry
+theorem edge_del_adj {a b x y : V} (H : SimpleGraph V) (h_H : H=G.deleteEdges {s(x,y)} ) :
+    H.Adj a b → G.Adj a b := by
+  aesop
+
+
+theorem edge_del_comp_edge_union (x y : V) (H : SimpleGraph V) (h_adj_xy : G.Adj x y) (h_H : H=G.deleteEdges {s(x,y)} := by try rfl) :
+    (G.connectedComponentMk x).edgeSet = (H.connectedComponentMk x).edgeSet ∪ (H.connectedComponentMk y).edgeSet ∪ {s(x,y)} := by
+  apply Set.ext
+  intro e
+  apply Iff.intro
+  · revert e
+    apply Sym2.ind
+    sorry
+  · revert e
+    apply Sym2.ind
+    intro a b h_ab
+    cases h_ab with
+    | inl h =>
+      cases h with
+      | inl h =>
+        obtain ⟨h_ac, h_bc, h_adj_ab⟩ := h
+        constructor
+        · apply ConnectedComponent.sound
+          exact edge_del_reachable H h_H <| ConnectedComponent.exact h_ac
+        constructor
+        · apply ConnectedComponent.sound
+          exact edge_del_reachable H h_H <| ConnectedComponent.exact h_bc
+        · exact edge_del_adj H h_H h_adj_ab
+      | inr h =>
+        obtain ⟨h_ac, h_bc, h_adj_ab⟩ := h
+        constructor
+        · apply ConnectedComponent.sound
+          have : G.Reachable a y := edge_del_reachable H h_H <| ConnectedComponent.exact h_ac
+          exact Nonempty.elim this (fun p => Nonempty.intro <| (Walk.cons h_adj_xy p.reverse).reverse)
+        constructor
+        · apply ConnectedComponent.sound
+          have : G.Reachable b y := edge_del_reachable H h_H <| ConnectedComponent.exact h_bc
+          exact Nonempty.elim this (fun p => Nonempty.intro <| (Walk.cons h_adj_xy p.reverse).reverse)
+        · exact edge_del_adj H h_H h_adj_ab
+    | inr h =>
+      have : s(a,b) = s(x,y) := by aesop
+      rw [this]
+      have h_xc : x ∈ (G.connectedComponentMk x).supp := rfl
+      have h_yc : y ∈ (G.connectedComponentMk x).supp :=
+        (ConnectedComponent.mem_supp_congr_adj (G.connectedComponentMk x) h_adj_xy).mp h_xc
+      exact ⟨h_xc, h_yc, h_adj_xy⟩
 
 
 
