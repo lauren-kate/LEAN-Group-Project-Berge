@@ -240,6 +240,125 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
 
 
 
+-- if all walks from a vertex x must pass through y to reach z, there exists a walk from x containing y but not z
+theorem walk_supp_cut_vertex ( w x y z: V) (p : G.Walk w x) (h_yp : y ∈ p.support) (h_yz_ne : y ≠ z) :
+    (∀ {a b:V} (w : G.Walk a b), b=x → (z ∈ w.support → y ∈ w.support) ) →
+    ∃ q : G.Walk y x, z ∉ q.support := by
+  induction p with
+  | nil =>
+    rename_i x
+    intro H
+    sorry
+  | cons h_adj q ih =>
+    rename_i w v x
+    let p := Walk.cons h_adj q
+    if h : z ∈ q.support then
+      intro H
+      have := H q rfl h
+      specialize ih this
+      aesop
+    else
+      if h1 : y ∈ q.support then
+        intro H
+        exact ih h1 H
+      else
+        intro H
+        have : w=y := by aesop
+        let p' := p.copy this rfl
+        have : z ∉ p'.support := by aesop
+        exact ⟨ p', this⟩
+
+
+-- if all walks from z to x contain yz, any walk to x containing z contains yz
+theorem walk_required_edge {w x y z : V} ( h: ∀ (w : G.Walk z x), s(y, z) ∈ w.edges) (p : G.Walk w x) : z ∈ p.support → s(y,z) ∈ p.edges :=
+  by induction p with
+  | nil =>
+    sorry
+  | cons h_adj q ih =>
+    rename_i w v x
+    let p := Walk.cons h_adj q
+    intro h_z
+    specialize ih h
+    if h_wz : w=z then
+      let p' : G.Walk z x := p.copy h_wz rfl
+      have : p.edges = p'.edges := by exact Eq.symm (Walk.edges_copy p h_wz rfl)
+      rw[this]
+      exact h p'
+    else
+      have : z ∈ q.support := by aesop
+      aesop
+
+
+-- if all walks from z to x contain yz, and x is reachable from z, there exists a walk from y to x not containing yz
+theorem t {x y z : V} : Nonempty (G.Walk z x) → (∀p : G.Walk z x, s(y,z) ∈ p.edges) → ∃ q : G.Walk y x, s(y,z) ∉ q.edges := by
+  intro h_p h_a
+
+  apply Nonempty.elim h_p
+  intro p
+
+  have : ∀ {a b:V} (w : G.Walk a b), b=x → (z ∈ w.support → y ∈ w.support) := by
+    intro a b w h_bx h_z_w
+    let w' : G.Walk a x := w.copy rfl h_bx
+    have : w'.support = w.support := Walk.support_copy w rfl h_bx
+    rw[←this]; rw[←this] at h_z_w
+    have := walk_required_edge h_a w' h_z_w
+    exact Walk.fst_mem_support_of_mem_edges w' this
+
+  have h_yp : y ∈ p.support := by aesop
+  have h_yz_ne : y ≠ z := by sorry
+
+  obtain ⟨ q, h⟩  := walk_supp_cut_vertex _ _ _ _ p h_yp h_yz_ne this
+  exists q
+  intro h
+  have : z ∈ q.support := by exact Walk.snd_mem_support_of_mem_edges q h
+  contradiction
+
+
+
+
+
+theorem edge_del_comp_supp_union {x y : V} (h_adj_xy : G.Adj x y) (H : SimpleGraph V) (h_H : H=G.deleteEdges {s(x,y)} := by try rfl) :
+    (G.connectedComponentMk x).supp = (H.connectedComponentMk x).supp ∪ (H.connectedComponentMk y).supp := by
+  apply Set.ext
+  intro v
+  apply Iff.intro
+  · intro h_xc
+
+    sorry
+
+  · intro h_u_xy
+    cases h_u_xy with
+    | inl h_v_cx =>
+      have : H.Reachable v x := by aesop
+      apply Nonempty.elim this; intro p
+      have h_sub : ∀e ∈ p.edges, e ∈ G.edgeSet := by
+        apply Sym2.ind; intro a b h_e
+        replace h_e : H.Adj a b := by exact Walk.adj_of_mem_edges p h_e;
+        aesop
+      let p' : G.Walk v x := p.transfer G h_sub
+      apply ConnectedComponent.sound
+      exact Nonempty.intro p'
+    | inr h_v_cy =>
+      have : H.Reachable y v := by apply Reachable.symm; aesop
+      apply Nonempty.elim this; intro q
+      have h_sub : ∀e ∈ q.edges, e ∈ G.edgeSet := by
+        apply Sym2.ind; intro a b h_e
+        replace h_e : H.Adj a b := by exact Walk.adj_of_mem_edges q h_e
+        aesop
+      let p : G.Walk x v := Walk.cons h_adj_xy <| q.transfer G h_sub
+      apply ConnectedComponent.sound
+      exact Nonempty.intro p.reverse
+
+
+
+
+
+theorem edge_del_comp_edge_union (x y : V) (H : SimpleGraph V) (h : H=G.deleteEdges {s(x,y)} := by try rfl) :
+    (G.connectedComponentMk x).edgeSet = (H.connectedComponentMk x).edgeSet ∪ (H.connectedComponentMk y).edgeSet ∪ {s(x,y)} := by sorry
+
+
+
+
 
 
 -- if a component only has vertices of deg 1 or 2, and at least one has deg 1, then another vertex has deg 1
