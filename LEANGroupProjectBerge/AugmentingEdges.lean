@@ -16,19 +16,6 @@ variable {M : G.Subgraph}
 
 
 
-lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v w} :
-    (Walk.cons h p).IsAlternatingPath M → p.IsAlternatingPath M := by
-  intro h_alt
-  constructor
-  · exact h_alt.of_cons
-  · intros x y z h_xnez h_xy h_yz
-    let p' := Walk.cons h p
-    have h_xyp' : s(x,y) ∈ p'.edges := by aesop
-    have h_yzp' : s(y,z) ∈ p'.edges := by aesop
-    exact h_alt.alternates h_xnez h_xyp' h_yzp'
-
-
-
 lemma cons_edgeset_card [Finite V] {u v w : V} {F : SimpleGraph V} (h : F.Adj u v) (p : F.Walk v w) :
     s(u,v) ∉ p.edges → (Walk.cons h p).toSubgraph.edgeSet.ncard = p.toSubgraph.edgeSet.ncard + 1 := by
   have := Fintype.ofFinite V

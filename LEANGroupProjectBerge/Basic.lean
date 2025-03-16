@@ -44,25 +44,6 @@ def edgeSet (p : F.Walk u v) : Set (Sym2 V) :=
 
 
 
--- can be used to provide a walk between an intermediary vertex and the end vertex
-theorem support_vertex_walk (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
-  induction p with
-  | nil =>
-    intro h
-    rename_i u
-    have : w=u :=by aesop
-    rw [this]
-    exact Nonempty.intro Walk.nil
-  | cons h_adj q ih =>
-    rename_i u w' v
-    if h : w=u then
-      subst h
-      exact fun _ => Nonempty.intro (Walk.cons h_adj q)
-    else
-      intro a
-      simp_all only [Walk.support_cons, List.mem_cons, false_or]
-
-
 end Walk
 
 
@@ -147,10 +128,7 @@ end Walk
 
 
 
-
-
 namespace ConnectedComponent
-
 
 -- whether a component is equivalent to a alternating path or cycle
 def componentAltCycle (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
@@ -160,7 +138,120 @@ def componentAltCycle (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
 def componentAltPath (c : F.ConnectedComponent) (M : G.Subgraph) : Prop :=
   ∃ (u v : V) (p : F.Walk u v), p.IsAltPathComponent M c
 
+end ConnectedComponent
 
+
+
+
+
+
+-- useful theorems for handling matchings, walks and components with the above definitions
+variable {M₁ : G.Subgraph}
+variable {M₂ : G.Subgraph}
+
+
+-- use to generate contradictions with matchings
+lemma matching_contr (hm : M₁.IsMatching) {a b c : V} (hne : a≠b) (h : M₁.Adj c a) (h' : M₁.Adj c b) : False := by
+  match hm (M₁.edge_vert h) with
+  | ⟨ x, h_x ⟩ =>
+    have : a=x := h_x.2 a h
+    have : b=x := h_x.2 b h'
+    exact hne (by aesop)
+
+
+
+
+lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v w} :
+    (Walk.cons h p).IsAlternatingPath M → p.IsAlternatingPath M := by
+  intro h_alt
+  constructor
+  · exact h_alt.of_cons
+  · intros x y z h_xnez h_xy h_yz
+    let p' := Walk.cons h p
+    have h_xyp' : s(x,y) ∈ p'.edges := by aesop
+    have h_yzp' : s(y,z) ∈ p'.edges := by aesop
+    exact h_alt.alternates h_xnez h_xyp' h_yzp'
+
+
+namespace Walk
+
+-- if two walks have the same list of edges, they have the same edgeset
+theorem edges_edgeset_eq (p : G.Walk u v) (q : F.Walk u v) : p.edges=q.edges → p.edgeSet=q.edgeSet := by
+  intro h
+  apply Set.ext; apply Sym2.ind; intro x y
+  apply Iff.intro
+  · intro h_set
+    change s(x,y) ∈ p.edges at h_set
+    aesop
+  · intro h_set
+    change s(x,y) ∈ q.edges at h_set
+    rw[←h] at h_set
+    exact h_set
+
+-- transferring a walk to another graph maintains the edge set
+theorem transfer_edgeset_eq (p : G.Walk u v) (h : ∀e ∈ p.edges, e ∈ F.edgeSet) :
+  p.edgeSet = (p.transfer F h).edgeSet := by
+  apply edges_edgeset_eq
+  exact Eq.symm (edges_transfer p h)
+
+
+
+theorem cons_edgeset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p).edgeSet = p.edgeSet ∪ {s(v,w)} := by
+  apply Set.ext; apply Sym2.ind; intro a b
+  apply Iff.intro
+  · intro h_ab
+    replace h_ab : s(a,b)= s(v,w) ∨ s(a,b) ∈ p.edges := List.mem_cons.mp h_ab
+    cases h_ab <;> aesop
+  · intro h_ab
+    show s(a,b) ∈ s(v,w) :: p.edges
+    apply List.mem_cons.mpr
+    cases h_ab <;> aesop
+
+
+
+
+-- can be used to provide a walk between an intermediary vertex and the end vertex
+theorem support_vertex_walk (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
+  induction p with
+  | nil =>
+    intro h
+    rename_i u
+    have : w=u :=by aesop
+    rw [this]
+    exact Nonempty.intro Walk.nil
+  | cons h_adj q ih =>
+    rename_i u w' v
+    if h : w=u then
+      subst h
+      exact fun _ => Nonempty.intro (Walk.cons h_adj q)
+    else
+      intro a
+      simp_all only [Walk.support_cons, List.mem_cons, false_or]
+
+
+-- any walk in the symmetric difference of two matchings satisfies the alternating condition
+theorem match_symmdiff_walk_alt (h_m₁ : M₁.IsMatching) (h_m₂ : M₂.IsMatching) {u v : V} (p : (symmDiff M₁.spanningCoe M₂.spanningCoe).Walk u v) :
+    ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M₁.Adj w x ↔ ¬M₁.Adj x y) := by
+  let F := symmDiff M₁.spanningCoe M₂.spanningCoe
+  intro w x y h_wy_ne h_p_wx h_p_xy
+  constructor
+  · exact fun h h' => matching_contr h_m₁ h_wy_ne h.symm h'
+  · intro h_nadj_xy
+    have h_fwx : F.Adj w x := p.adj_of_mem_edges h_p_wx
+    have h_fxy : F.Adj x y := p.adj_of_mem_edges h_p_xy
+    have h_m₂xy : M₂.Adj x y := by cases h_fxy <;> aesop
+    cases h_fwx with
+    | inl h => exact h.1
+    | inr h => exact False.elim <| matching_contr h_m₂ h_wy_ne h.1.symm h_m₂xy
+
+
+
+end Walk
+
+
+
+
+namespace ConnectedComponent
 
 -- any vertex in a walk is in the same component as the end of the walk
 theorem walk_vertex_supp (c : F.ConnectedComponent) (p : F.Walk u v) :
