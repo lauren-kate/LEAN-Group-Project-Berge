@@ -175,18 +175,38 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
 
 namespace Walk
 
+-- if two walks have the same list of vertices, they have the same vertex set
+theorem supp_vertexset_eq (p : G.Walk u v) (q : F.Walk u v) : p.support=q.support → p.vertexSet=q.vertexSet := by
+  intro h
+  unfold vertexSet
+  rw[h]
+
+
+-- transferring a walk to another graph maintains the vertex set
+theorem transfer_vertexset_eq (p : G.Walk u v) (h : ∀e ∈ p.edges, e ∈ F.edgeSet) :
+  p.vertexSet = (p.transfer F h).vertexSet := by
+  apply supp_vertexset_eq
+  exact Eq.symm (support_transfer p h)
+
+
+-- the vertex set of the concatenation of an edge with a walk is the old walk's vertex set U the new vertex
+theorem cons_vertexset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p).vertexSet = p.vertexSet ∪ {v} := by
+  apply Set.ext; intro a
+  apply Iff.intro
+  · intro h_a
+    have : a=v ∨ a ∈ p.support := List.mem_cons.mp h_a
+    cases this <;> aesop
+  · intro h_a
+    apply List.mem_cons.mpr
+    aesop
+
+
 -- if two walks have the same list of edges, they have the same edgeset
 theorem edges_edgeset_eq (p : G.Walk u v) (q : F.Walk u v) : p.edges=q.edges → p.edgeSet=q.edgeSet := by
   intro h
-  apply Set.ext; apply Sym2.ind; intro x y
-  apply Iff.intro
-  · intro h_set
-    change s(x,y) ∈ p.edges at h_set
-    aesop
-  · intro h_set
-    change s(x,y) ∈ q.edges at h_set
-    rw[←h] at h_set
-    exact h_set
+  unfold edgeSet
+  rw[h]
+
 
 -- transferring a walk to another graph maintains the edge set
 theorem transfer_edgeset_eq (p : G.Walk u v) (h : ∀e ∈ p.edges, e ∈ F.edgeSet) :
@@ -195,7 +215,7 @@ theorem transfer_edgeset_eq (p : G.Walk u v) (h : ∀e ∈ p.edges, e ∈ F.edge
   exact Eq.symm (edges_transfer p h)
 
 
-
+-- the edgeset of the concatenation of an edge with a walk is the old walk's edgeset U the edge
 theorem cons_edgeset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p).edgeSet = p.edgeSet ∪ {s(v,w)} := by
   apply Set.ext; apply Sym2.ind; intro a b
   apply Iff.intro
@@ -206,8 +226,6 @@ theorem cons_edgeset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p).
     show s(a,b) ∈ s(v,w) :: p.edges
     apply List.mem_cons.mpr
     cases h_ab <;> aesop
-
-
 
 
 -- can be used to provide a walk between an intermediary vertex and the end vertex

@@ -173,9 +173,7 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
         rw[h_Vqd] at h
         exact h_x_nd h
 
-
-
-      -- prove P and C contain the same edges
+      -- prove P and C contain the same edges and vertices
       have h_Epc : P.edgeSet = C.edgeSet := by
         have : P.edgeSet = Q.edgeSet ∪ {s(x,x')} := by
           rw[Qg.cons_edgeset h_adj_xx', Q.transfer_edgeset_eq h_transcon]
@@ -191,8 +189,10 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
           have := edge_del_comp_edge_union h_adj_xx' H rfl
           aesop
         aesop
-
-      have h_Vpc : P.vertexSet = C.supp := by sorry
+      have h_Vpc : P.vertexSet = C.supp := by
+        have : P.vertexSet = Q.vertexSet ∪ {x} := by
+          rw[Qg.cons_vertexset h_adj_xx', Q.transfer_vertexset_eq h_transcon]
+        aesop
 
       exact ⟨y, by aesop, by aesop, h_y_gd1, P, h_p_path, h_Epc, h_Vpc⟩
 
