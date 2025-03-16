@@ -20,5 +20,5 @@ variable {u v w x: V}
 open Walk
 
 
-lemma symmDiffIsMatching (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmenting M): (symmDiff M p.toSubgraph).IsMatching :=
+lemma symmDiff_M_p_is_matching (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
 sorry
