@@ -248,7 +248,10 @@ theorem walk_supp_cut_vertex ( w x y z: V) (p : G.Walk w x) (h_yp : y ∈ p.supp
   | nil =>
     rename_i x
     intro H
-    sorry
+    have : y=x := by aesop
+    let p := (@Walk.nil _ G x ).copy this.symm rfl
+    exists p
+    aesop
   | cons h_adj q ih =>
     rename_i w v x
     let p := Walk.cons h_adj q
@@ -269,11 +272,17 @@ theorem walk_supp_cut_vertex ( w x y z: V) (p : G.Walk w x) (h_yp : y ∈ p.supp
         exact ⟨ p', this⟩
 
 
+
 -- if all walks from z to x contain yz, any walk to x containing z contains yz
 theorem walk_required_edge {w x y z : V} ( h: ∀ (w : G.Walk z x), s(y, z) ∈ w.edges) (p : G.Walk w x) : z ∈ p.support → s(y,z) ∈ p.edges :=
   by induction p with
   | nil =>
-    sorry
+    rename_i x
+    intro h_z
+    have :z=x := by aesop
+    let w : G.Walk z x := (@Walk.nil _ G x).copy this.symm rfl
+    specialize h w
+    aesop
   | cons h_adj q ih =>
     rename_i w v x
     let p := Walk.cons h_adj q
@@ -289,13 +298,12 @@ theorem walk_required_edge {w x y z : V} ( h: ∀ (w : G.Walk z x), s(y, z) ∈ 
       aesop
 
 
--- if all walks from z to x contain yz, and x is reachable from z, there exists a walk from y to x not containing yz
-theorem t {x y z : V} : Nonempty (G.Walk z x) → (∀p : G.Walk z x, s(y,z) ∈ p.edges) → ∃ q : G.Walk y x, s(y,z) ∉ q.edges := by
-  intro h_p h_a
 
+-- if all walks from z to x contain yz, and x is reachable from z, there exists a walk from y to x not containing yz
+theorem walk_only_reach_through {x y z : V} : Nonempty (G.Walk z x) → (∀p : G.Walk z x, s(y,z) ∈ p.edges) → ∃ q : G.Walk y x, s(y,z) ∉ q.edges := by
+  intro h_p h_a
   apply Nonempty.elim h_p
   intro p
-
   have : ∀ {a b:V} (w : G.Walk a b), b=x → (z ∈ w.support → y ∈ w.support) := by
     intro a b w h_bx h_z_w
     let w' : G.Walk a x := w.copy rfl h_bx
@@ -303,10 +311,11 @@ theorem t {x y z : V} : Nonempty (G.Walk z x) → (∀p : G.Walk z x, s(y,z) ∈
     rw[←this]; rw[←this] at h_z_w
     have := walk_required_edge h_a w' h_z_w
     exact Walk.fst_mem_support_of_mem_edges w' this
-
   have h_yp : y ∈ p.support := by aesop
-  have h_yz_ne : y ≠ z := by sorry
-
+  have h_yz_ne : y ≠ z := by
+    specialize h_a p
+    have : G.Adj y z := by exact Walk.adj_of_mem_edges p h_a
+    aesop
   obtain ⟨ q, h⟩  := walk_supp_cut_vertex _ _ _ _ p h_yp h_yz_ne this
   exists q
   intro h
