@@ -61,7 +61,7 @@ def augPath (M : G.Subgraph) (u v : V) : Type u :=
 --Added maximal matching for completeness' sake with maximum matchings (maximum and maximal go hand in hand I feel) - we dont need for Berge's
 def IsMaximalMatching (M : G.Subgraph): Prop :=
   M.IsMatching ∧
-  (¬∃ v w, v ∉ M.support ∧ w ∉ M.support ∧ G.Adj v w)
+  (¬∃ v w, v ∉ M.spanningCoe.support ∧ w ∉ M.spanningCoe.support ∧ G.Adj v w)
 
 def IsMaximumMatching (M : G.Subgraph): Prop :=
   M.IsMatching
