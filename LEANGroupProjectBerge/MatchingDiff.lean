@@ -65,19 +65,6 @@ lemma set_three_uq {α : Type u} {s : Set α} (h : s.encard > 2) :
 
 
 
-lemma edge_verts {M : G.Subgraph} {u v : V} (h : M.Adj u v) : u ∈ M.verts := by
-  apply @Subgraph.mem_verts_of_mem_edge _ _ _ s(u,v) u
-  · exact Subgraph.mem_edgeSet.mpr h
-  · aesop
-
-
-lemma matching_contr (hm : M₁.IsMatching) {a b c : V} (hne : a≠b) (h : M₁.Adj c a) (h' : M₁.Adj c b) : False := by
-  match hm (edge_verts h) with
-  | ⟨ x, h_x ⟩ =>
-    have : a=x := h_x.2 a h
-    have : b=x := h_x.2 b h'
-    exact hne (by aesop)
-
 
 theorem matching_symm_diff_dg_lt2 (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
   ∀v : V, ((symmDiff M₁.spanningCoe M₂.spanningCoe).neighborSet v).encard <= 2 := by
@@ -113,12 +100,3 @@ theorem matching_symm_diff_dg_lt2 (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatc
           exact matching_contr hm₂ h_anec h₂a.1 h₂c.1
       | inr h₂b =>
         exact matching_contr hm₂ h_aneb h₂a.1 h₂b.1
-
-
-
-
-
-theorem matching_symm_diff_alt_paths_cycles (hm₁ : M₁.IsMatching) (hm₂ : M₂.IsMatching) :
-  ∀c : (symmDiff M₁.spanningCoe M₂.spanningCoe).ConnectedComponent,
-  c.componentAltCycle M₁ ∨ c.componentAltPath M₁ := by
-    sorry
