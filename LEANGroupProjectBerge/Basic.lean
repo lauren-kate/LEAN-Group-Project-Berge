@@ -94,7 +94,7 @@ IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
 end walk
 
 
-
+--- Lemma for Lauren's node above mine
 lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
 ∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
@@ -121,6 +121,7 @@ lemma AlongAugPathButNotInM {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M):
 ∀ x ∈ p.support, x ∉ M.support → (x=u ∨ x = v):= by
 intro x hp hM
+sorry
 
 --lemma EdgeFromEitherPathOrMatching {x y : V}{M :G.Subgraph}{p: G.Walk u v}[Finite V]
 --(h1: M.IsMatching)(h2: p.IsAugmentingPath M)
