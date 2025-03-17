@@ -312,5 +312,15 @@ theorem single_vertex (c : F.ConnectedComponent) (h : x ∈ c.supp) :
     apply False.elim <| Set.mem_def.mp <| h_nset ▸ h_neighbor
 
 
+theorem single_vertex_comp_supp (c : F.ConnectedComponent) (h : x ∈ c.supp) :
+    F.neighborSet x = ∅ → c.supp = {x} := by
+  intro h_nnbr
+  apply Set.ext
+  intro v
+  apply Iff.intro
+  · intro h_vc
+    have : v=x := c.single_vertex h h_nnbr v h_vc
+    rw[this]; trivial
+  · aesop
 
 end ConnectedComponent

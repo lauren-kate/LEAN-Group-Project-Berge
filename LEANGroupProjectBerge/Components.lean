@@ -154,6 +154,24 @@ theorem two_vertex_walk (x y v) (p : G.Walk x v) (h : G.Adj x y) : ExistsUnique 
     aesop
 
 
+theorem two_vertex_component {x y} (h_adj : G.Adj x y) : ExistsUnique (G.Adj x) → ExistsUnique (G.Adj y) →
+    (G.connectedComponentMk x).supp = {x, y} := by
+  intro h_x_uq h_y_uq
+  apply Set.ext; intro v
+  apply Iff.intro
+  · intro h_v_xc
+    have : G.Reachable x v := by apply Reachable.symm; aesop
+    apply this.elim; intro p
+    have : v=x ∨ v=y := two_vertex_walk x y v p h_adj h_x_uq h_y_uq
+    aesop
+  · intro h_v_xy
+    have : v=x ∨ v=y := by aesop
+    cases this with
+    | inl h => aesop
+    | inr h => rw[h]; exact
+      (ConnectedComponent.mem_supp_congr_adj _ h_adj).mp rfl
+
+
 
 
 -- if all walks from a vertex x must pass through y to reach z, there exists a walk from x containing y but not z

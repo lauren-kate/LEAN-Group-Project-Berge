@@ -103,6 +103,30 @@ theorem comp_vertex_pair (C : G.ConnectedComponent) (h_C2 : C.supp.ncard = 2) :
 
 
 
+theorem edge_del_nbr_eq (x y a : V):
+    a≠x ∧ a≠y → (G.deleteEdges {s(x,y)}).neighborSet a = G.neighborSet a := by
+  aesop
+
+theorem edge_del_nbr_minus (x y : V) :
+    (G.deleteEdges {s(x,y)}).neighborSet x = (G.neighborSet x) \ {y} := by
+  aesop
+
+
+theorem edge_del_nbr_minus_card {x y : V} (h_adj : G.Adj x y) {n : ℕ} (h_en : (G.neighborSet x).encard=↑n) :
+    ((G.deleteEdges {s(x,y)}).neighborSet x).encard = (G.neighborSet x).encard - 1 := by
+  let H := G.deleteEdges {s(x,y)}
+  have h_minus : H.neighborSet x = G.neighborSet x \ {y}:= edge_del_nbr_minus x y
+  have h_g_fin: Set.Finite (G.neighborSet x) := by exact Set.finite_of_encard_eq_coe h_en
+  have h_h_fin : Set.Finite (H.neighborSet x) := by exact Set.Finite.diff h_g_fin
+  rw [←Set.Finite.cast_ncard_eq h_g_fin, ←Set.Finite.cast_ncard_eq h_h_fin]
+  aesop
+
+
+theorem t : (@Nat.cast ENat _ 2) - (@Nat.cast ENat _ 1) = ↑1 :=
+  by
+  simp_all only [Nat.cast_ofNat, Nat.cast_one]
+  rfl
+
 
 -- if a component only has vertices of deg 1 or 2, and at least one has deg 1, then another vertex has deg 1
 -- and there is a path between these two vertices which contains the whole component
@@ -121,24 +145,45 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
       exact comp_vertex_pair C h_neq.symm x h_x_inc h_x_deg1
     else --INDUCTIVE STEP
       have ih := deg_one_two_path k
-      have h_C : C=G.connectedComponentMk x := by aesop
+      have h_C : C=G.connectedComponentMk x := ((C.mem_supp_iff x).mp h_x_inc).symm
       have h_C_fin : C.supp.Finite := by apply Set.finite_of_ncard_pos; omega
 
       obtain ⟨x', h_adj_xx', h_x'_uq⟩ := (one_neighbour_iff x).mp h_x_deg1
-      have h_x'_gd2 : (G.neighborSet x').encard=2 := by sorry
+      have h_x'_gd2 : (G.neighborSet x').encard=2 := by
+        by_contra
+        have : x' ∈ C.supp := (C.mem_supp_congr_adj h_adj_xx').mp h_x_inc
+        have : ExistsUnique (G.Adj x') := (one_neighbour_iff x').mp (by cases (h_d x' this) <;> aesop)
+        rw[propext (one_neighbour_iff x)] at h_x_deg1
+        have : (G.connectedComponentMk x).supp = {x, x'} := two_vertex_component h_adj_xx' h_x_deg1 this
+        have : (G.connectedComponentMk x).supp.ncard = 2 := by rw[this]; exact Set.ncard_pair <| G.ne_of_adj h_adj_xx'
+        aesop
 
       -- delete xx' to obtain H
       let H : SimpleGraph V := G.deleteEdges {s(x,x')}
-      have h_x'_hd1 : (H.neighborSet x').encard=1 := by sorry
-      have h_x_hc : (H.connectedComponentMk x).supp = {x} := by sorry
+      have h_x'_hd1 : (H.neighborSet x').encard=1 := by
+        have := h_x'_gd2 ▸ Sym2.eq_swap ▸ (edge_del_nbr_minus_card h_adj_xx'.symm h_x'_gd2)
+        rw[this]
+        rfl
+      have h_x_hc : (H.connectedComponentMk x).supp = {x} := by
+        have : (H.neighborSet x).encard = 0 := by
+          have := edge_del_nbr_minus_card h_adj_xx' h_x_deg1
+          rw [h_x_deg1] at this
+          rw [this]
+          rfl
+        replace this : (H.neighborSet x) = ∅ := Set.encard_eq_zero.mp this
+        exact (H.connectedComponentMk x).single_vertex_comp_supp rfl this
 
       -- D is the connected component of H containing x'
       let D : H.ConnectedComponent := H.connectedComponentMk x'
       have h_C_Dux : C.supp = {x} ∪ D.supp := h_C ▸ h_x_hc ▸ edge_del_comp_supp_union h_adj_xx' H rfl
-      have h_D_fin : D.supp.Finite := by sorry
 
-      have h_x_nd : x ∉ D.supp := sorry
+      have h_x_nd : x ∉ D.supp := by
+        intro h
+        have : H.connectedComponentMk x' = H.connectedComponentMk x :=
+          Eq.trans  ((D.mem_supp_iff x').mp rfl) ((D.mem_supp_iff x).mp h).symm
+        aesop
       have h_D_supp : D.supp = C.supp \ {x} := by aesop
+      have h_D_fin : D.supp.Finite := h_D_supp ▸ Set.Finite.diff h_C_fin
 
       have h_Dk : k = D.supp.ncard := by
         rw [h_C_Dux] at h_neq
@@ -146,12 +191,38 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
         rw [Set.ncard_insert_of_not_mem h_x_nd h_D_fin] at h_neq
         omega
 
-      have h_D_d12 : DegOneOrTwo D := by sorry
+      have h_D_d12 : DegOneOrTwo D := by
+        intro v h_vd
+        if h : v≠x ∧ v≠x' then
+          have : v ∈ C.supp := by rw[h_C_Dux]; right; exact h_vd
+          rw[edge_del_nbr_eq x x' v]
+          exact h_d v this
+          exact h --?
+        else
+          have : v=x ∨ v=x' := by
+            rw[propext not_and_or] at h;
+            rw [propext Classical.not_not] at h;
+            rw [propext Classical.not_not] at h;
+            exact h
+          cases this with
+          | inl h =>
+            exact False.elim <| h_x_nd <| h ▸ h_vd
+          | inr h =>
+            left; exact h ▸ h_x'_hd1
 
       -- obtain path Q in H from x' to y
       specialize ih H D h_Dk (by omega) h_D_d12 x' rfl h_x'_hd1
-      obtain ⟨y, h_yD, h_yx_ne, h_y_hd1, Q, h_q_path, h_Eqd, h_Vqd⟩ := ih
-      have h_y_gd1 : (G.neighborSet y).encard = 1 := by sorry
+      obtain ⟨y, h_yD, h_yx'_ne, h_y_hd1, Q, h_q_path, h_Eqd, h_Vqd⟩ := ih
+      have h_yx_ne : y≠x := by
+        intro h
+        let Q' := Q.copy rfl h
+        have : H.connectedComponentMk x = D := ConnectedComponent.sound <| Nonempty.intro Q'.reverse
+        exact False.elim <| h_x_nd <| (D.mem_supp_iff x).mpr this
+      have h_y_gd1 : (G.neighborSet y).encard = 1 := by
+        have : H.neighborSet y = G.neighborSet y := by
+          apply edge_del_nbr_eq
+          exact ⟨h_yx_ne, h_yx'_ne⟩
+        aesop
 
       have h_transcon : ∀e ∈ Q.edges, e ∈ G.edgeSet := by
         apply Sym2.ind; intro a b h_ab
@@ -175,9 +246,9 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
 
       -- prove P and C contain the same edges and vertices
       have h_Epc : P.edgeSet = C.edgeSet := by
-        have : P.edgeSet = Q.edgeSet ∪ {s(x,x')} := by
+        have h_p_qu : P.edgeSet = Q.edgeSet ∪ {s(x,x')} := by
           rw[Qg.cons_edgeset h_adj_xx', Q.transfer_edgeset_eq h_transcon]
-        have : (H.connectedComponentMk x).edgeSet = ∅ := by
+        have h_x_0 : (H.connectedComponentMk x).edgeSet = ∅ := by
           apply Set.ext; intro e; apply Iff.intro
           · revert e; apply Sym2.ind; intro a b h_ab
             obtain ⟨ h_ac, h_bc, h_ab⟩ := h_ab
@@ -185,16 +256,16 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
             exact False.elim <| H.loopless a <| this ▸ h_ab
           · revert e; apply Sym2.ind; intro a b h_ab
             contradiction
-        have : C.edgeSet = D.edgeSet ∪ {s(x,x')} := by
+        have h_c_du : C.edgeSet = D.edgeSet ∪ {s(x,x')} := by
           have := edge_del_comp_edge_union h_adj_xx' H rfl
           aesop
-        aesop
+        rw[h_p_qu, h_c_du, h_Eqd]
       have h_Vpc : P.vertexSet = C.supp := by
         have : P.vertexSet = Q.vertexSet ∪ {x} := by
           rw[Qg.cons_vertexset h_adj_xx', Q.transfer_vertexset_eq h_transcon]
-        aesop
+        rw[this, h_C_Dux, h_Vqd]; exact Set.union_comm D.supp {x}
 
-      exact ⟨y, by aesop, by aesop, h_y_gd1, P, h_p_path, h_Epc, h_Vpc⟩
+      exact ⟨y, by rw[←h_Vpc]; aesop , h_yx_ne, h_y_gd1, P, h_p_path, h_Epc, h_Vpc⟩
 
 
 
