@@ -122,10 +122,6 @@ theorem edge_del_nbr_minus_card {x y : V} (h_adj : G.Adj x y) {n : ℕ} (h_en : 
   aesop
 
 
-theorem t : (@Nat.cast ENat _ 2) - (@Nat.cast ENat _ 1) = ↑1 :=
-  by
-  simp_all only [Nat.cast_ofNat, Nat.cast_one]
-  rfl
 
 
 -- if a component only has vertices of deg 1 or 2, and at least one has deg 1, then another vertex has deg 1
@@ -269,6 +265,36 @@ theorem deg_one_two_path (n : ℕ) (G : SimpleGraph V) (C : G.ConnectedComponent
 
 
 
+theorem edge_del_deg2_deg1 {x y : V} (h_adj : G.Adj x y) (C : G.ConnectedComponent) (h_d2: ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
+    ∀v ∈ C.supp, v=x ∨ v=y → ((G.deleteEdges {s(x,y)}).neighborSet v).encard = 1 := by
+  rintro v h_vc (h | h)
+  · subst h
+    have h1 := h_d2 v h_vc
+    have h2 := edge_del_nbr_minus_card h_adj h1
+    rw[h2, h1]; rfl
+  · subst h
+    have h1 := h_d2 v h_vc
+    have h2 := Sym2.eq_swap ▸ edge_del_nbr_minus_card h_adj.symm h1
+    rw[h2, h1]; rfl
+
+
+
+theorem edge_del_deg2_deg2 {x y : V} (C : G.ConnectedComponent) (h_d2: ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
+    ∀v ∈ C.supp, ¬(v=x ∨ v=y) → ((G.deleteEdges {s(x,y)}).neighborSet v).encard = 2 := by
+  intro v h_vc h_v_nxy
+  have : v≠x ∧ v≠y := ne_eq _ _ ▸ not_or.mp h_v_nxy
+  have : (G.deleteEdges {s(x,y)}).neighborSet v = G.neighborSet v := edge_del_nbr_eq x y v this
+  rw[this]
+  exact h_d2 v h_vc
+
+
+
+theorem cycle_cons_vertexset {x y : V} (w : G.Walk x y) (h_adj : G.Adj y x) : (Walk.cons h_adj w).vertexSet = w.vertexSet := by
+  unfold Walk.vertexSet
+  show {v | v ∈ y :: w.support} = {v | v ∈ w.support}
+  aesop
+
+
 
 theorem deg_two_cycle [Finite V] (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.supp, (G.neighborSet v).encard=2) :
     ∃ (x : V) (P : G.Walk x x), P.IsCycle ∧ P.edgeSet=C.edgeSet ∧ P.vertexSet=C.supp := by
@@ -284,31 +310,110 @@ theorem deg_two_cycle [Finite V] (C : G.ConnectedComponent) (h_d2 : ∀v ∈ C.s
     · exact (ConnectedComponent.mem_supp_congr_adj (G.connectedComponentMk x) h_y).mp rfl
     · exact h_y
 
+  -- delete xy to obtain H
   let H : SimpleGraph V := G.deleteEdges {s(x,y)}
-  have h_xd1 : (H.neighborSet x).encard = 1 := by sorry
-  have h_yd1 : (H.neighborSet y).encard = 1 := by sorry
+  have h_xd1 : (H.neighborSet x).encard = 1 := edge_del_deg2_deg1 h_adj_xy C h_d2 x h_xc (by left; rfl)
+  have h_yd1 : (H.neighborSet y).encard = 1 := edge_del_deg2_deg1 h_adj_xy C h_d2 y h_yc (by right; rfl)
 
+  -- let D be the connected component of H containing x
   let D : H.ConnectedComponent := H.connectedComponentMk x
-  have h_D_d12 : DegOneOrTwo D := by sorry
-  have h_D_xyd1 : ∀v ∈ D.supp, (H.neighborSet v).encard=1 ↔ (v=x ∨ v=y) := by sorry
-  have h_D2 : D.supp.ncard ≥ 2 := by sorry
+  have h_C_Duyc : C.supp = D.supp ∪ (H.connectedComponentMk y).supp := (C.mem_supp_iff x).mp h_xc ▸ edge_del_comp_supp_union h_adj_xy H rfl
+  have h_D_subs_C : ∀v:V, v ∈ D.supp → v ∈ C.supp := by aesop
+  have h_D_d12 : DegOneOrTwo D := by
+    intro v h_vd
+    have : v ∈ C.supp := h_D_subs_C v h_vd
+    if h : v=x ∨ v=y then
+      left; cases h <;> aesop
+    else
+      right; exact edge_del_deg2_deg2 C h_d2 v this h
+  have h_D_xyd1 : ∀v ∈ D.supp, (H.neighborSet v).encard=1 → (v=x ∨ v=y) := by
+    intro v h_vd h_vd1
+    by_contra h
+    have := edge_del_deg2_deg2 C h_d2 v (h_D_subs_C v h_vd) h
+    rw[this] at h_vd1
+    contradiction
 
+  have h_D2 : D.supp.ncard ≥ 2 := comp_deg1_supp_gt2 D x rfl h_xd1
+
+  -- use inductive path proof from x to form a path around the remaining edges of C
   obtain ⟨y', h_y'D, h_y'nx, h_y'd1, P, h_path, h_Epd, h_Vpd ⟩ :=
     deg_one_two_path D.supp.ncard H D rfl h_D2 h_D_d12 x rfl h_xd1
 
-  have h_y_eq : y=y' := by aesop
+  have h_y_eq : y=y' := by
+    have := h_D_xyd1 y' h_y'D h_y'd1
+    cases this <;> first | contradiction | apply Eq.symm; assumption
+  have h_y_D : H.connectedComponentMk y = D := by
+    rw[h_y_eq]; exact h_y'D
+  have h_transcon : ∀e ∈ P.edges, e ∈ G.edgeSet := by
+        apply Sym2.ind; intro a b h_ab
+        have : H.Adj a b := by exact Walk.adj_of_mem_edges P h_ab
+        aesop
 
-  let Pg : G.Walk x y' := P.transfer G sorry
-  let Q : G.Walk y' y' := Walk.cons (h_y_eq ▸ h_adj_xy.symm) Pg
+  -- add the previously deleted edge to the path to form a cycle
+  have h_adj_xy' : G.Adj x y' := h_y_eq ▸ h_adj_xy
+  let Pg : G.Walk x y' := P.transfer G h_transcon
+  let Q : G.Walk y' y' := Walk.cons h_adj_xy'.symm Pg
+  have h_p_pq: Pg.support = P.support := by exact Walk.support_transfer P h_transcon
 
   exists y', Q
   apply And.intro
-  · sorry
-  · sorry
+  · constructor -- prove Q is a cycle
+    · constructor
+      · constructor
+        · have : Q.edges = s(y',x) :: Pg.edges := Walk.edges_cons h_adj_xy'.symm Pg
+          rw[this,  Walk.edges_transfer P h_transcon]
+          have : s(y',x) ∉ P.edges := by
+            intro h
+            have : H.Adj y' x := by exact Walk.adj_of_mem_edges P h
+            rw[←h_y_eq] at this; aesop
+          exact List.nodup_cons.mpr ⟨this, h_path.edges_nodup⟩
+      · aesop
+    · have h_qtail : Q.support.tail = Pg.support := by rfl
+      rw[h_qtail, h_p_pq]
+      exact h_path.support_nodup
+  apply And.intro
+  -- prove edge sets equal
+  · have : C.edgeSet = D.edgeSet ∪ D.edgeSet ∪ {s(x,y)} := by
+      have := edge_del_comp_edge_union h_adj_xy H rfl
+      rw[(C.mem_supp_iff x).mp h_xc] at this
+      rw[h_y_D] at this
+      exact this
+    simp at this
+    rw[this, ←h_Epd]
+    apply Set.ext
+    intro e
+    have h_pq_edges_eq : Pg.edges = P.edges := Walk.edges_transfer P h_transcon
+    apply Iff.intro
+    · intro h
+      replace h : e ∈  s(y',x) :: Pg.edges := Set.mem_setOf.mp h
+      replace h : e = s(y',x) ∨ e ∈ Pg.edges := by exact List.mem_cons.mp h
+      rw[h_pq_edges_eq] at h
+      exact Sym2.eq_swap ▸ h_y_eq ▸ h
+    · rintro ( h | h)
+      · rw[h]; unfold Walk.edgeSet
+        aesop
+      · unfold Walk.edgeSet at h
+        rw[←h_pq_edges_eq] at h
+        unfold Walk.edgeSet
+        replace h := Set.mem_setOf.mp h
+        have : Q.edges = s(y',x) :: Pg.edges := by rfl
+        rw[this]
+        apply Set.mem_setOf.mpr
+        aesop
+  -- prove vertex sets equal
+  · rw[h_C_Duyc]
+    have : Q.vertexSet = P.vertexSet := by
+      have : Q.support = y' :: Pg.support := by rfl
+      rw[cycle_cons_vertexset]
+      unfold Walk.vertexSet
+      rw[h_p_pq]
+    rw[this, h_Vpd]
+    rw[h_y_D]
+    exact Eq.symm (Set.union_eq_self_of_subset_left fun ⦃a⦄ a ↦ a)
 
 
 
--- dumb as fuck
+
 theorem enat_one_or_two (n : ENat) (h : n > 0 ∧ n ≤ 2) : n=1 ∨ n=2 := by
   cases n with
   | top => contradiction
