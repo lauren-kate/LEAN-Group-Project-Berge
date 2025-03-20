@@ -14,11 +14,6 @@ variable {F : SimpleGraph V}
 variable {M : G.Subgraph}
 variable {u v w x : V}
 
-def IsMaximumMatching (M : G.Subgraph): Prop :=
-  M.IsMatching
-  ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
-
-
 theorem cycle_is_even(M' : G.Subgraph) (hm : M.IsMatching) (hm' : M'.IsMatching):
 ∀ (p : (symmDiff M.spanningCoe M'.spanningCoe).Walk u u ), p.IsCycle → Even p.edgeSet.encard := by
   let F := (symmDiff M.spanningCoe M'.spanningCoe)
@@ -41,5 +36,5 @@ theorem exists_aug_path (M' : G.Subgraph) (hm : M.IsMatching) (hm' : M'.IsMatchi
 ∃ (p: (symmDiff M.spanningCoe M'.spanningCoe).Walk u v), (p.IsAugmentingPath M):=
 sorry
 
-theorem berge_left (M : G.Subgraph): (IsMaximumMatching M) → ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
+theorem berge_left (M : G.Subgraph): (M.IsMaximumMatching) → ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
   sorry
