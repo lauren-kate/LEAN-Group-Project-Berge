@@ -15,12 +15,6 @@ variable {F : SimpleGraph V}
 variable {M : G.Subgraph}
 variable {u v w x : V}
 
---- Lemma for Lauren's node above mine
-lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
-(h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
-∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
-sorry
-
 
 lemma EndsAugPathMeansNotInM {M :G.Subgraph}{p: G.Walk u v}
 (h2: p.IsAugmentingPath M):
@@ -62,12 +56,12 @@ show ¬ M'.Adj x y
 by_cases h5: x ∈ M.support
 · sorry
 · sorry
-  -- if there exists and edge it must come from either p or M
+  --if there exists and edge it must come from either p or M
   --if comes from M, this is a contradiction of p is an augmenting path (ends not unsaturated)
-  --if comes from p this is a contradiction of p being a path, because there would be a
-  --repeated vertice
+  --if comes from p this is a contradiction of p being a path
 
-
-
---issue, F is not a matching as there are singelton vertices
---this has already been made by Oscar thank you
+--- Lemma for Lauren's node above mine
+lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
+∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
+sorry
