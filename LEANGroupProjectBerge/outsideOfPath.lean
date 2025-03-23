@@ -24,8 +24,8 @@ variable {u v w x: V}
 
 open Walk
 
-lemma mem_support_contr_simple (x:V) (G : SimpleGraph V) :  x ∉ G.support ↔ ¬ ∃ (w : V), G.Adj x w := by rfl
 
+--Contrapositive for SimpleFraph.Subgraph.mem_support (For my own ease of use)
 lemma mem_support_contr (x:V) (H : G.Subgraph) :  x ∉ H.support ↔ ¬ ∃ (w : V), H.Adj x w := by rfl
 
 
@@ -35,11 +35,10 @@ lemma not_adj_gen (x w:V) (H:G.Subgraph)(h: x ∉ H.support):  ¬H.Adj x w :=
   show ¬H.Adj x w from h2 w
 
 
---mem_symDiff_edgeSet_graphs
+--Rewrite of Set.mem_symmDiff for edgesets of graphs
 lemma mem_symDiff_edgeSet_graphs (x y:V) (H J:G.Subgraph) (S: SimpleGraph V) (h1: S = symmDiff H.spanningCoe J.spanningCoe) : s(x,y) ∈ S.edgeSet ↔ s(x,y) ∈ H.spanningCoe.edgeSet ∧ s(x,y) ∉ J.spanningCoe.edgeSet ∨ s(x,y) ∈ J.spanningCoe.edgeSet ∧ s(x,y) ∉ H.spanningCoe.edgeSet :=
   by aesop
 
---mpr_not_mem_symDiff_edgeSet_graphs
 lemma mpr_not_mem_symDiff_edgeSet_graphs (x y:V) (H J:G.Subgraph) (S: SimpleGraph V) (h1: S = symmDiff H.spanningCoe J.spanningCoe) (h2: (s(x,y) ∉ H.spanningCoe.edgeSet ∧ s(x,y) ∉ J.spanningCoe.edgeSet)):  s(x,y)∉S.edgeSet :=
   have h5: ¬(s(x,y) ∈ H.spanningCoe.edgeSet ∧ s(x,y) ∉ J.spanningCoe.edgeSet ∨ s(x,y) ∈ J.spanningCoe.edgeSet ∧ s(x,y) ∉ H.spanningCoe.edgeSet) := by aesop
   have h6: s(x,y)∉S.edgeSet := Iff.mpr (Iff.not (mem_symDiff_edgeSet_graphs x y H J S h1)) h5
@@ -50,8 +49,8 @@ lemma mpr_not_mem_symDiff_edgeSet_graphs (x y:V) (H J:G.Subgraph) (S: SimpleGrap
 
 open Classical
 
---Unused assumptions: [Finite V] (h1:M.IsMatching) (h2: p.IsAugmentingPath M) (h5: y ∉ p.toSubgraph.support)
-lemma outside_path (M :G.Subgraph) (M':SimpleGraph V) (u v x y:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) (h4:x ∉ p.toSubgraph.support)  : (¬M.Adj x y ↔ ¬M'.Adj x y) where
+--Unused assumptions: (h1:M.IsMatching) (h2: p.IsAugmentingPath M) (h5: y ∉ p.toSubgraph.support)
+lemma outside_path [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v x y:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) (h4:x ∉ p.toSubgraph.support)  : (¬M.Adj x y ↔ ¬M'.Adj x y) where
     mp :=
       fun h: ¬M.Adj x y =>
       have h7 : s(x, y) ∉ M.spanningCoe.edgeSet := Iff.mpr (Iff.not (M.spanningCoe.mem_edgeSet)) h
@@ -81,7 +80,7 @@ lemma outside_path (M :G.Subgraph) (M':SimpleGraph V) (u v x y:V) (p : G.Walk u 
 lemma iff_not_opposite {a b : Prop} (h : ¬a ↔ ¬b): a ↔ b := by aesop
 
 
-lemma outside_path_forall (M :G.Subgraph) (M':SimpleGraph V) (u v:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) : ∀ x y : V,  (x ∉ p.toSubgraph.support → (M.Adj x y ↔ M'.Adj x y)) := by
+lemma outside_path_forall [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) : ∀ x y : V,  (x ∉ p.toSubgraph.support → (M.Adj x y ↔ M'.Adj x y)) := by
   intro x y
   intro h
   exact iff_not_opposite (outside_path M M' u v x y p h3 h)
