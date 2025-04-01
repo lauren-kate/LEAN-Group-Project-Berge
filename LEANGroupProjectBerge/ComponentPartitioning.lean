@@ -126,29 +126,89 @@ theorem comp_sub_edgeset_ncard_eq_edgeset (c : F.ConnectedComponent) : c.subEdge
     fun ⟨⟨e, h_eF⟩ , h_eC⟩ => ⟨e, h_eC⟩
   apply Nat.card_eq_of_bijective f
   constructor
-  · unfold Function.Injective
-    rintro ⟨⟨a, h_aF⟩ , h_aC⟩ ⟨⟨b, h_bF⟩ , h_bC⟩ h_f_eq
+  · rintro ⟨⟨a, h_aF⟩ , h_aC⟩ ⟨⟨b, h_bF⟩ , h_bC⟩ h_f_eq
     simp_all only [Subtype.mk.injEq, f]
-  · unfold Function.Surjective
-    rintro ⟨b ,h_bC⟩
+  · rintro ⟨b, h_bC⟩
     have : b ∈ F.edgeSet := by
       revert b; apply Sym2.ind; intro x y h_b
       exact h_b.2.2
     exists ⟨⟨ b, this ⟩, h_bC⟩
 
 
+
 theorem subgraph_sub_edgeset_ncard_eq_edgeset (M : G.Subgraph) (F : SimpleGraph V) : (M.subEdgeSet F).ncard = (M.edgeSet ∩ F.edgeSet).ncard := by
-  sorry
+  let f : ↑(M.subEdgeSet F) → ↑(M.edgeSet ∩ F.edgeSet) :=
+    fun ⟨⟨e, h_eF⟩ , h_eM⟩ => ⟨e, ⟨h_eM, h_eF⟩⟩
+  apply Nat.card_eq_of_bijective f
+  constructor
+  · rintro ⟨⟨a, h_aF⟩ , h_aM⟩ ⟨⟨b, h_bF⟩ , h_bM⟩ h_f_eq
+    simp_all only [Subtype.mk.injEq, f]
+  · rintro ⟨b, ⟨h_bM, h_bF⟩⟩
+    exists ⟨⟨b, h_bF⟩ , h_bM⟩
+
+
+
+theorem int_nat_le (a b : Nat) : a ≤ b ↔ Int.ofNat a ≤ Int.ofNat b := by
+  simp_all only [Int.ofNat_eq_coe, Nat.cast_le]
+
+
+
+def intNat : Nat →+ Int where
+  toFun := Int.ofNat;
+  map_zero' := rfl
+  map_add' := by
+    intro x y
+    simp_all only [Int.ofNat_eq_coe, Nat.cast_add]
+
+
+
+theorem finsum_nat_int_cast (α : Sort u) [Finite α] {f : α → Nat} : ∑ᶠ (t : α), Int.ofNat (f t) = Int.ofNat (∑ᶠ (t : α), f t) := by
+  have : (Function.support (f ∘ PLift.down)).Finite := by toFinite_tac
+  have : ∑ᶠ (t : α), intNat (f t) = intNat (∑ᶠ (t : α), f t) := by
+    apply Eq.symm <| AddMonoidHom.map_finsum_plift intNat f this
+  aesop
+
 
 
 
 
 theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent), (c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) :
-    M'.edgeSet.ncard ≤ M.edgeSet.ncard := by
+    (M'.edgeSet ∩ F.edgeSet).ncard ≤ (M.edgeSet ∩ F.edgeSet).ncard := by
+  rw[←subgraph_sub_edgeset_ncard_eq_edgeset M F, ←subgraph_sub_edgeset_ncard_eq_edgeset M' F]
+  rw[comp_intersection_sum F M, comp_intersection_sum F M']
+  replace h : ∀ (c : F.ConnectedComponent), Int.ofNat (c.edgeSet ∩ M.edgeSet).ncard - Int.ofNat (c.edgeSet ∩ M'.edgeSet).ncard ≥ 0 := by
+    intro c
+    replace h := (int_nat_le _ _).mp <| h c
+    omega
+
+  have : ∑ᶠ (t : ↑F.edgeSetsPartition), (Int.ofNat (M.subEdgeSet F ∩ ↑t).ncard - Int.ofNat (M'.subEdgeSet F ∩ ↑t).ncard) ≥ 0 := by
+    apply finsum_induction
+    · rfl
+    · intros; omega
+    · rintro ⟨E, ⟨⟨c, h_Ec_eq⟩ , _ ⟩⟩
+      specialize h c
+      sorry
+
+  rw[finsum_sub_distrib (by toFinite_tac) (by toFinite_tac)] at this
+  replace this : ∑ᶠ (i : ↑F.edgeSetsPartition), Int.ofNat (M.subEdgeSet F ∩ ↑i).ncard ≥ ∑ᶠ (i : ↑F.edgeSetsPartition), Int.ofNat (M'.subEdgeSet F ∩ ↑i).ncard := by omega
+  replace this := finsum_nat_int_cast ↑F.edgeSetsPartition ▸ finsum_nat_int_cast ↑F.edgeSetsPartition ▸ this
+  exact (int_nat_le _ _).mpr this
+
+
+
+theorem symmdiff_subgraph_intersection_minus {F : SimpleGraph V} (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) :
+    M.edgeSet ∩ F.edgeSet = M.edgeSet \ M'.edgeSet := by
   sorry
 
 
-
+theorem symmdiff_intersection_le [Finite V] (F : SimpleGraph V) (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) (h_M_leq : (M'.edgeSet ∩ F.edgeSet).ncard ≤ (M.edgeSet ∩ F.edgeSet).ncard ) :
+    M'.edgeSet.ncard ≤ M.edgeSet.ncard := by
+  rw[←Set.ncard_inter_add_ncard_diff_eq_ncard M'.edgeSet M.edgeSet, ←Set.ncard_inter_add_ncard_diff_eq_ncard M.edgeSet M'.edgeSet]
+  have h1 : M'.edgeSet ∩ F.edgeSet = M'.edgeSet \ M.edgeSet := symmdiff_subgraph_intersection_minus <| symmDiff_comm M'.spanningCoe M.spanningCoe ▸ h_F
+  have h2 : M.edgeSet ∩ F.edgeSet = M.edgeSet \ M'.edgeSet := symmdiff_subgraph_intersection_minus h_F
+  have : (M'.edgeSet \ M.edgeSet).ncard ≤ (M.edgeSet \ M'.edgeSet).ncard := by rw[h1, h2] at h_M_leq; exact h_M_leq
+  rw[Set.inter_comm M'.edgeSet M.edgeSet]
+  omega
 
 
 
@@ -156,10 +216,12 @@ theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent)
 variable (h_gt : M.edgeSet.ncard < M'.edgeSet.ncard)
 include h_gt
 
-theorem ex_component_intersection_lt [Finite V] : ∃c : F.ConnectedComponent, (c.edgeSet ∩ M.edgeSet).ncard < (c.edgeSet ∩ M'.edgeSet).ncard := by
+theorem ex_component_intersection_lt [Finite V] (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) :
+    ∃c : F.ConnectedComponent, (c.edgeSet ∩ M.edgeSet).ncard < (c.edgeSet ∩ M'.edgeSet).ncard := by
   by_contra h
   replace h : ∀c : F.ConnectedComponent, ((c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) := by
     intro c
     simp_all only [not_exists, not_lt, ge_iff_le]
   apply not_le.mpr h_gt;
+  apply symmdiff_intersection_le F h_F
   exact component_intersection_gt h
