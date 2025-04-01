@@ -4,12 +4,12 @@ import Mathlib.Combinatorics.SimpleGraph.Matching
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 import Mathlib.Algebra.BigOperators.Finprod
 import Mathlib.Data.Setoid.Partition
+import Mathlib.Data.Setoid.Partition.Card
 
 import LEANGroupProjectBerge.Basic
 
 universe u
 variable {V : Type u}
-variable {F G : SimpleGraph V}
 variable {F G : SimpleGraph V}
 variable {M M' : G.Subgraph}
 
@@ -22,16 +22,23 @@ namespace SimpleGraph
 namespace ConnectedComponent
 
 def subEdgeSet (c : F.ConnectedComponent) : Set ↑F.edgeSet :=
-  setOf ( fun ⟨ e, _ ⟩  => e ∈ c.edgeSet )
+  setOf ( fun ⟨ e, _ ⟩ => e ∈ c.edgeSet )
 
 end ConnectedComponent
+
+
+namespace Subgraph
+
+def subEdgeSet (M : G.Subgraph) (F : SimpleGraph V) : Set ↑F.edgeSet :=
+  setOf ( fun ⟨ e, _ ⟩ => e ∈ M.edgeSet)
+
+end Subgraph
 
 
 def edgeSetsPartition (F : SimpleGraph V) : Set ( Set ↑F.edgeSet)  :=
   { E : Set ↑F.edgeSet | ∃ c : F.ConnectedComponent, Set.image Subtype.val E = c.edgeSet } \ {∅}
 
 
-end SimpleGraph
 
 
 theorem comp_edgeset_subtype_eq (c : F.ConnectedComponent) : Set.image Subtype.val (c.subEdgeSet) = c.edgeSet := by
@@ -46,23 +53,35 @@ theorem comp_edgeset_subtype_eq (c : F.ConnectedComponent) : Set.image Subtype.v
     exists a
 
 
+theorem comp_adj_sub_edgeset_not_empty {x y : V} (h_adj : F.Adj x y) : (F.connectedComponentMk x).subEdgeSet ≠ ∅ := by
+  let c := F.connectedComponentMk x
+  have : y ∈ c.supp := (SimpleGraph.ConnectedComponent.mem_supp_congr_adj _ h_adj).mp rfl
+  have h_eC : s(x,y) ∈ c.edgeSet := ⟨ rfl, this, h_adj⟩
+  have h_eF : s(x,y) ∈ F.edgeSet := h_adj
+  have : ⟨s(x,y), h_eF⟩ ∈ c.subEdgeSet := by aesop
+  aesop
+
 
 open Setoid
 
-theorem comp_edgesets_partition : IsPartition G.edgeSetsPartition := by
+theorem comp_edgesets_partition (F : SimpleGraph V) : IsPartition F.edgeSetsPartition := by
   unfold IsPartition
   constructor
   · exact Set.not_mem_diff_of_mem rfl
   · rintro ⟨e, h_e⟩
     revert e; apply Sym2.ind
     intro x y h_e
-    let c := G.connectedComponentMk x
+    let c := F.connectedComponentMk x
     let E' := c.subEdgeSet
     exists E'
     simp
     constructor
     · constructor
-      · sorry
+      · constructor
+        · exists c
+          exact comp_edgeset_subtype_eq c
+        · have : E' ≠ ∅ := comp_adj_sub_edgeset_not_empty h_e
+          aesop
       · have : y ∈ c.supp := (SimpleGraph.ConnectedComponent.mem_supp_congr_adj c h_e).mp rfl
         have : s(x,y) ∈ c.edgeSet := ⟨ by aesop, this, h_e ⟩
         aesop
@@ -94,10 +113,42 @@ theorem comp_edgesets_partition : IsPartition G.edgeSetsPartition := by
 
 
 
+theorem comp_intersection_sum [Finite V] (F: SimpleGraph V) (M : G.Subgraph) : (M.subEdgeSet F).ncard = ∑ᶠ (t : ↑F.edgeSetsPartition), ((M.subEdgeSet F) ∩ ↑t).ncard :=
+  Setoid.IsPartition.ncard_eq_finsum (comp_edgesets_partition F) (M.subEdgeSet F)
+
+
+
+
+
+
+theorem comp_sub_edgeset_ncard_eq_edgeset (c : F.ConnectedComponent) : c.subEdgeSet.ncard = c.edgeSet.ncard := by
+  let f : ↑c.subEdgeSet → ↑c.edgeSet :=
+    fun ⟨⟨e, h_eF⟩ , h_eC⟩ => ⟨e, h_eC⟩
+  apply Nat.card_eq_of_bijective f
+  constructor
+  · unfold Function.Injective
+    rintro ⟨⟨a, h_aF⟩ , h_aC⟩ ⟨⟨b, h_bF⟩ , h_bC⟩ h_f_eq
+    simp_all only [Subtype.mk.injEq, f]
+  · unfold Function.Surjective
+    rintro ⟨b ,h_bC⟩
+    have : b ∈ F.edgeSet := by
+      revert b; apply Sym2.ind; intro x y h_b
+      exact h_b.2.2
+    exists ⟨⟨ b, this ⟩, h_bC⟩
+
+
+theorem subgraph_sub_edgeset_ncard_eq_edgeset (M : G.Subgraph) (F : SimpleGraph V) : (M.subEdgeSet F).ncard = (M.edgeSet ∩ F.edgeSet).ncard := by
+  sorry
+
+
+
 
 theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent), (c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) :
     M'.edgeSet.ncard ≤ M.edgeSet.ncard := by
   sorry
+
+
+
 
 
 
