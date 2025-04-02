@@ -18,6 +18,9 @@ variable {M M' : G.Subgraph}
 
 namespace SimpleGraph
 
+-- We define 'sub' edgesets as sets of edges in the subtype ↑F.edgeSet, the *type* of edges in F
+-- This is in order to establish a partition of ↑F.edgeSet into the edgesets of connected components with at least one edge
+-- The definition of IsPartition requires that we represent the set being partitioned as a Subtype and not a Set
 
 namespace ConnectedComponent
 
@@ -40,7 +43,7 @@ def edgeSetsPartition (F : SimpleGraph V) : Set ( Set ↑F.edgeSet)  :=
 
 
 
-
+-- A component's edgeSet is the image of its subEdgeSet by the function Subtype.val
 theorem comp_edgeset_subtype_eq (c : F.ConnectedComponent) : Set.image Subtype.val (c.subEdgeSet) = c.edgeSet := by
   apply Set.ext; apply Sym2.ind; intro x y; apply Iff.intro
   · aesop
@@ -52,7 +55,7 @@ theorem comp_edgeset_subtype_eq (c : F.ConnectedComponent) : Set.image Subtype.v
     let a : ↑F.edgeSet := ⟨s(x,y), this⟩
     exists a
 
-
+-- A connected component's subEdgeSet cannot be empty if a vertex inside the component has a neighbour
 theorem comp_adj_sub_edgeset_not_empty {x y : V} (h_adj : F.Adj x y) : (F.connectedComponentMk x).subEdgeSet ≠ ∅ := by
   let c := F.connectedComponentMk x
   have : y ∈ c.supp := (SimpleGraph.ConnectedComponent.mem_supp_congr_adj _ h_adj).mp rfl
@@ -64,6 +67,7 @@ theorem comp_adj_sub_edgeset_not_empty {x y : V} (h_adj : F.Adj x y) : (F.connec
 
 open Setoid
 
+-- The set of nonempty edgesets of components of F form a partition of F's edgeset
 theorem comp_edgesets_partition (F : SimpleGraph V) : IsPartition F.edgeSetsPartition := by
   unfold IsPartition
   constructor
@@ -112,7 +116,7 @@ theorem comp_edgesets_partition (F : SimpleGraph V) : IsPartition F.edgeSetsPart
 
 
 
-
+-- The cardinality of a subgraph M's subEdgeSet in F is equal to the sum of the cardinalities of the intersection of M's subEdgeSet with the edge set of connected components in F
 theorem comp_intersection_sum [Finite V] (F: SimpleGraph V) (M : G.Subgraph) : (M.subEdgeSet F).ncard = ∑ᶠ (t : ↑F.edgeSetsPartition), ((M.subEdgeSet F) ∩ ↑t).ncard :=
   Setoid.IsPartition.ncard_eq_finsum (comp_edgesets_partition F) (M.subEdgeSet F)
 
@@ -120,7 +124,7 @@ theorem comp_intersection_sum [Finite V] (F: SimpleGraph V) (M : G.Subgraph) : (
 
 
 
-
+-- All edges in a component C of F are in E(F), so C's subEdgeSet has a bijection to E(C); their cardinalities are equal.
 theorem comp_sub_edgeset_ncard_eq_edgeset (c : F.ConnectedComponent) : c.subEdgeSet.ncard = c.edgeSet.ncard := by
   let f : ↑c.subEdgeSet → ↑c.edgeSet :=
     fun ⟨⟨e, h_eF⟩ , h_eC⟩ => ⟨e, h_eC⟩
@@ -135,7 +139,7 @@ theorem comp_sub_edgeset_ncard_eq_edgeset (c : F.ConnectedComponent) : c.subEdge
     exists ⟨⟨ b, this ⟩, h_bC⟩
 
 
-
+-- A subgraph M's subEdgeSet in a graph F has a bijection to E(M) ∩ E(F). Specifically, their cardinalities are equal.
 theorem subgraph_sub_edgeset_ncard_eq_edgeset (M : G.Subgraph) (F : SimpleGraph V) : (M.subEdgeSet F).ncard = (M.edgeSet ∩ F.edgeSet).ncard := by
   let f : ↑(M.subEdgeSet F) → ↑(M.edgeSet ∩ F.edgeSet) :=
     fun ⟨⟨e, h_eF⟩ , h_eM⟩ => ⟨e, ⟨h_eM, h_eF⟩⟩
@@ -147,10 +151,10 @@ theorem subgraph_sub_edgeset_ncard_eq_edgeset (M : G.Subgraph) (F : SimpleGraph 
     exists ⟨⟨b, h_bF⟩ , h_bM⟩
 
 
-
+-- Later proofs require manipulations of inequalities and finsums of/as integer values
+-- So first we set up theorems to handle casting between Int and Nat in this context
 theorem int_nat_le (a b : Nat) : a ≤ b ↔ Int.ofNat a ≤ Int.ofNat b := by
   simp_all only [Int.ofNat_eq_coe, Nat.cast_le]
-
 
 
 def intNat : Nat →+ Int where
@@ -159,7 +163,6 @@ def intNat : Nat →+ Int where
   map_add' := by
     intro x y
     simp_all only [Int.ofNat_eq_coe, Nat.cast_add]
-
 
 
 theorem finsum_nat_int_cast (α : Sort u) [Finite α] {f : α → Nat} : ∑ᶠ (t : α), Int.ofNat (f t) = Int.ofNat (∑ᶠ (t : α), f t) := by
@@ -171,9 +174,27 @@ theorem finsum_nat_int_cast (α : Sort u) [Finite α] {f : α → Nat} : ∑ᶠ 
 
 theorem sub_edge_component_intersection {c : F.ConnectedComponent} {E : Set ↑F.edgeSet} (h_Eeq : Subtype.val '' E = c.edgeSet) (M : G.Subgraph) :
     (c.edgeSet ∩ M.edgeSet).ncard = (M.subEdgeSet F ∩ E).ncard := by
-  sorry --give bijection?
+  have h_E_val_c: ∀ e : ↑F.edgeSet, e ∈ E → e.val ∈ c.edgeSet := by
+    rw[←h_Eeq]
+    intro e he
+    exact Set.mem_image_of_mem Subtype.val he
+  let f : ↑(M.subEdgeSet F ∩ E) → ↑(c.edgeSet ∩ M.edgeSet) :=
+    fun ⟨⟨e, h_eF⟩, h_eM, h_eE⟩ => ⟨e, h_E_val_c ⟨e, h_eF⟩ h_eE, h_eM⟩
+  apply Eq.symm; apply Nat.card_eq_of_bijective f
+  constructor
+  · rintro ⟨⟨b, h_bF⟩, ⟨h_bM, h_bE⟩⟩ ⟨⟨a, h_aF⟩, ⟨h_aM, h_aE⟩⟩ h
+    simp_all only [Subtype.mk.injEq, f]
+  · rintro ⟨e, h_ec, h_eM⟩
+    have h_eF : e ∈ F.edgeSet := by revert e; apply Sym2.ind; intro x y h_ec h_eM; exact h_ec.2.2
+    have h_eE : ⟨ e, h_eF⟩ ∈ E := by
+      obtain ⟨e', h_e'⟩  : ∃e' ∈ E, Subtype.val e'=e := (Set.mem_image Subtype.val E e).mp (h_Eeq ▸ h_ec)
+      aesop
+    exists ⟨⟨e, h_eF⟩, h_eM, h_eE⟩
 
 
+
+-- This is the core of the proof
+-- If all components C of F are s.t. |E(C) ∩ E(M)| ≥ |E(C) ∩ E(M')|, then |E(M) ∩ E(F)| ≥ |E(M') ∩ E(F)|
 theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent), (c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) :
     (M'.edgeSet ∩ F.edgeSet).ncard ≤ (M.edgeSet ∩ F.edgeSet).ncard := by
   rw[←subgraph_sub_edgeset_ncard_eq_edgeset M F, ←subgraph_sub_edgeset_ncard_eq_edgeset M' F]
@@ -197,11 +218,22 @@ theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent)
 
 
 
+-- For any subgraphs M, M' of G, E(M) ∩ E(M Δ M') = E(M) \ E(M')
 theorem symmdiff_subgraph_intersection_minus {F : SimpleGraph V} (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) :
     M.edgeSet ∩ F.edgeSet = M.edgeSet \ M'.edgeSet := by
-  sorry
+  apply Set.ext; apply Sym2.ind; intro x y;
+  subst h_F
+  apply Iff.intro
+  · simp
+    intro h_M h_F
+    cases h_F <;> aesop
+  · simp
+    intro h_M h_F
+    exact ⟨h_M, by left; aesop⟩
 
 
+
+-- If F = M Δ M' and |E(F) ∩ E(M)| ≥ |E(F) ∩ E(M')|, then |E(M)| ≥ |E(M')|
 theorem symmdiff_intersection_le [Finite V] (F : SimpleGraph V) (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) (h_M_leq : (M'.edgeSet ∩ F.edgeSet).ncard ≤ (M.edgeSet ∩ F.edgeSet).ncard ) :
     M'.edgeSet.ncard ≤ M.edgeSet.ncard := by
   rw[←Set.ncard_inter_add_ncard_diff_eq_ncard M'.edgeSet M.edgeSet, ←Set.ncard_inter_add_ncard_diff_eq_ncard M.edgeSet M'.edgeSet]
@@ -214,10 +246,8 @@ theorem symmdiff_intersection_le [Finite V] (F : SimpleGraph V) (h_F : F = symmD
 
 
 
-variable (h_gt : M.edgeSet.ncard < M'.edgeSet.ncard)
-include h_gt
-
-theorem ex_component_intersection_lt [Finite V] (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) :
+-- If |E(M')| > |E(M)| , there exists a connected component C in F=M Δ M' with more edges in M' than M
+theorem ex_component_intersection_lt [Finite V] (h_gt : M.edgeSet.ncard < M'.edgeSet.ncard) (h_F : F = symmDiff M.spanningCoe M'.spanningCoe) :
     ∃c : F.ConnectedComponent, (c.edgeSet ∩ M.edgeSet).ncard < (c.edgeSet ∩ M'.edgeSet).ncard := by
   by_contra h
   replace h : ∀c : F.ConnectedComponent, ((c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) := by
