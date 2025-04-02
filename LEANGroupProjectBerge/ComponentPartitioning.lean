@@ -169,7 +169,9 @@ theorem finsum_nat_int_cast (α : Sort u) [Finite α] {f : α → Nat} : ∑ᶠ 
   aesop
 
 
-
+theorem sub_edge_component_intersection {c : F.ConnectedComponent} {E : Set ↑F.edgeSet} (h_Eeq : Subtype.val '' E = c.edgeSet) (M : G.Subgraph) :
+    (c.edgeSet ∩ M.edgeSet).ncard = (M.subEdgeSet F ∩ E).ncard := by
+  sorry --give bijection?
 
 
 theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent), (c.edgeSet ∩ M.edgeSet).ncard ≥ (c.edgeSet ∩ M'.edgeSet).ncard) :
@@ -180,15 +182,14 @@ theorem component_intersection_gt [Finite V] (h : ∀ (c : F.ConnectedComponent)
     intro c
     replace h := (int_nat_le _ _).mp <| h c
     omega
-
   have : ∑ᶠ (t : ↑F.edgeSetsPartition), (Int.ofNat (M.subEdgeSet F ∩ ↑t).ncard - Int.ofNat (M'.subEdgeSet F ∩ ↑t).ncard) ≥ 0 := by
     apply finsum_induction
     · rfl
     · intros; omega
     · rintro ⟨E, ⟨⟨c, h_Ec_eq⟩ , _ ⟩⟩
       specialize h c
-      sorry
-
+      rw[sub_edge_component_intersection h_Ec_eq M,sub_edge_component_intersection h_Ec_eq M'] at h
+      exact h
   rw[finsum_sub_distrib (by toFinite_tac) (by toFinite_tac)] at this
   replace this : ∑ᶠ (i : ↑F.edgeSetsPartition), Int.ofNat (M.subEdgeSet F ∩ ↑i).ncard ≥ ∑ᶠ (i : ↑F.edgeSetsPartition), Int.ofNat (M'.subEdgeSet F ∩ ↑i).ncard := by omega
   replace this := finsum_nat_int_cast ↑F.edgeSetsPartition ▸ finsum_nat_int_cast ↑F.edgeSetsPartition ▸ this
