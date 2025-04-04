@@ -29,11 +29,31 @@ theorem aug_symm_diff_gt [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmenti
 --remove everything
 
 
-lemma SymDiffSpanningCoeEqualsMatching [Finite V] {u v : V} {p : G.Walk u v}
-(h1: M.IsMatching)(h2 : p.IsAugmentingPath M):
+
+lemma SymmDiffSpanningCoeEqSymmDiffofSpanningCoe {H₁ H₂ :G.Subgraph}:
+(symmDiff H₁.spanningCoe H₂.spanningCoe) = (symmDiff H₁ H₂).spanningCoe := by
+refine SimpleGraph.ext_iff.mpr ?_
+have h: ∀x y, (symmDiff H₁.spanningCoe H₂.spanningCoe).Adj x y ↔ (symmDiff H₁ H₂).spanningCoe.Adj x y := by
+  intro x y
+  simp_all only [spanningCoe_adj]
+  apply Iff.intro
+  · intro a
+    sorry
+  · intro a
+    sorry
+aesop
+
+
+
+
+
+lemma SymmDiffSpanningCoeEqualsMatching [Finite V] {u v : V} {p : G.Walk u v}:
 (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard = (symmDiff M p.toSubgraph).edgeSet.ncard := by
 have h3: (symmDiff M p.toSubgraph).edgeSet = (symmDiff M p.toSubgraph).spanningCoe.edgeSet:= by exact rfl
-have h4: (symmDiff M p.toSubgraph).spanningCoe.edgeSet = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet:= by sorry
+have h4: (symmDiff M p.toSubgraph).spanningCoe.edgeSet = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet:= by
+  have hsd: (symmDiff M p.toSubgraph).spanningCoe = symmDiff M.spanningCoe p.toSubgraph.spanningCoe:= by
+    exact Eq.symm SymmDiffSpanningCoeEqSymmDiffofSpanningCoe
+  aesop_graph
 have h5: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet = (symmDiff M p.toSubgraph).edgeSet:= by aesop
 aesop
 
@@ -42,12 +62,10 @@ lemma FiniteSubgraphFiniteEdgeSet{M:G.Subgraph}[Finite V]: Finite M.edgeSet := b
   have h2: DecidableRel M.Adj := by exact Classical.decRel M.Adj
   exact Subtype.finite
 
-
 lemma FiniteSubgraphencardEqncard{M:G.Subgraph}[Finite V]: M.edgeSet.encard = M.edgeSet.ncard := by
   have h1: Finite M.edgeSet:= by exact FiniteSubgraphFiniteEdgeSet
   have h2: M.edgeSet.encard = M.edgeSet.ncard:= by exact Eq.symm (Set.Finite.cast_ncard_eq h1)
   exact h2
-
 
 theorem IfBerge{M:G.Subgraph}{h: M.IsMatching}[Finite V]:
 (∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M) → ¬ IsMaximumMatching M := by
@@ -71,7 +89,7 @@ theorem IfBerge{M:G.Subgraph}{h: M.IsMatching}[Finite V]:
     have hi: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard:= by
       exact aug_symm_diff_gt h1
     have hi2: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard = (symmDiff M p.toSubgraph).edgeSet.ncard:= by
-      exact SymDiffSpanningCoeEqualsMatching h h1
+      exact SymmDiffSpanningCoeEqualsMatching
     aesop
   have hmf: M'.IsMatching ∧ M.edgeSet.ncard < M'.edgeSet.ncard := by aesop
   contradiction
