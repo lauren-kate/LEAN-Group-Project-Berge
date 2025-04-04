@@ -9,6 +9,7 @@ import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 
 namespace SimpleGraph
@@ -75,7 +76,7 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
 
 
 --Use this to delete unsaturated vertices to get IsMatching for a subgraph
-def saturatedSubgraph (H : SimpleGraph V) (h_sub : H.IsSubgraph G) : G.Subgraph where
+def saturatedSubgraph (H : SimpleGraph V) (h_sub : H ≤ G) : G.Subgraph where
   verts := { v:V | ∃w, H.Adj v w };
   Adj := H.Adj;
   adj_sub := @h_sub
@@ -84,6 +85,19 @@ def saturatedSubgraph (H : SimpleGraph V) (h_sub : H.IsSubgraph G) : G.Subgraph 
 
 
 end Subgraph
+
+-- To use saturatedSubgraph with M Δ P
+theorem subg_path_symdiff_subg {u v : V} (p : G.Walk u v) (M : G.Subgraph) :
+    symmDiff M.spanningCoe p.toSubgraph.spanningCoe ≤ G := by
+  intro x y h
+  cases h with
+  | inl h =>
+    apply M.adj_sub; aesop
+  | inr h =>
+    show s(x,y) ∈ G.edgeSet; apply p.edges_subset_edgeSet
+    have : s(x,y) ∈ p.toSubgraph.edgeSet := h.1
+    aesop
+
 
 
 
