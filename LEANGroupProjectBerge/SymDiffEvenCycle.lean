@@ -46,16 +46,18 @@ theorem cycle_eq_in_symm_diff [Finite V] (M' : G.Subgraph) (hm : M.IsMatching) (
 namespace SimpleGraph
 
 theorem reuben (hm : M.IsMatching) (M': SimpleGraph V) (P: G.Walk u v) (hp: P.IsAugmentingPath M) (hM': M'=(symmDiff M.spanningCoe P.toSubgraph.spanningCoe)) :
-∀ (w x: V), s(w, x) ∈ P.edges → (M'.Adj w x ↔ ¬M.Adj w x):= by
+∀ (w x: V), s(w, x) ∈ P.toSubgraph.edgeSet → (M'.Adj w x ↔ ¬M.Adj w x):= by
   intro h1 h2 h3
   unfold symmDiff at hM'
-  have h4: M'.edgeSet = symmDiff M.spanningCoe.edgeSet P.toSubgraph.spanningCoe.edgeSet := hM' ▸  @symm_diff_edgeset V M.spanningCoe P.toSubgraph.spanningCoe
+  have h4: M'.edgeSet = symmDiff M.spanningCoe.edgeSet P.toSubgraph.spanningCoe.edgeSet := hM' ▸ @symm_diff_edgeset V M.spanningCoe P.toSubgraph.spanningCoe
   have h5: M'.Adj h1 h2 ↔ (M.spanningCoe \ P.toSubgraph.spanningCoe).Adj h1 h2 ∨ (P.toSubgraph.spanningCoe \ M.spanningCoe).Adj h1 h2 := hM' ▸ sup_adj (M.spanningCoe \ P.toSubgraph.spanningCoe) (P.toSubgraph.spanningCoe \ M.spanningCoe) h1 h2
   constructor
   case mp =>
     intro h6
-    have h7: (M.spanningCoe \ P.toSubgraph.spanningCoe).Adj h1 h2 ∨ (P.toSubgraph.spanningCoe \ M.spanningCoe).Adj h1 h2 := h5.mp h6
-
+    have h7: ((M.spanningCoe \ P.toSubgraph.spanningCoe).Adj h1 h2) ∨ ((P.toSubgraph.spanningCoe \ M.spanningCoe).Adj h1 h2) := h5.mp h6
+    have h8: P.toSubgraph.spanningCoe.Adj h1 h2 := by assumption
+    have h9: (M.spanningCoe.Adj h1 h2) ∧ (¬P.toSubgraph.spanningCoe.Adj h1 h2) ∨ ((P.toSubgraph.spanningCoe \ M.spanningCoe).Adj h1 h2) := (sdiff_adj M.spanningCoe P.toSubgraph.spanningCoe h1 h2).mp h7
+    have h10: (P.toSubgraph.spanningCoe \ M.spanningCoe).Adj h1 h2 := Or.elim (sdiff.sdiff P.toSubgraph)
     sorry
   case mpr =>
     sorry
