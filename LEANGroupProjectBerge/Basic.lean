@@ -63,9 +63,9 @@ def IsMaximalMatching (M : G.Subgraph): Prop :=
   M.IsMatching ∧
   (¬∃ v w, v ∉ M.support ∧ w ∉ M.support ∧ G.Adj v w)
 
-def IsMaximumMatching (M : G.Subgraph): Prop :=
+def IsMaximumMatching (M : G.Subgraph)[Finite V]: Prop :=
   M.IsMatching
-  ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
+  ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.ncard < N.edgeSet.ncard)
 
 
 -- This should go in another file
