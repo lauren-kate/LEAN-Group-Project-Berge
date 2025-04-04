@@ -77,7 +77,7 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
 
 --Use this to delete unsaturated vertices to get IsMatching for a subgraph
 def saturatedSubgraph (H : SimpleGraph V) (h_sub : H ≤ G) : G.Subgraph where
-  verts := { v:V | ∃w, H.Adj v w };
+  verts := H.support;
   Adj := H.Adj;
   adj_sub := @h_sub
   edge_vert := fun h => ⟨_, h⟩
