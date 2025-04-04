@@ -15,6 +15,9 @@ variable {u v w x : V}
 
 namespace SimpleGraph
 namespace Subgraph
+
+--remove everything between lines when links are working
+
 lemma symmDiff_M_p_is_matching (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
     sorry
 
@@ -23,11 +26,27 @@ theorem aug_symm_diff_gt [Finite V] {u v : V} {p : G.Walk u v} (h : p.IsAugmenti
   (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard :=
   sorry
 
+--remove everything
+
+
 lemma SymDiffSpanningCoeEqualsMatching [Finite V] {u v : V} {p : G.Walk u v}
 (h1: M.IsMatching)(h2 : p.IsAugmentingPath M):
 (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard = (symmDiff M p.toSubgraph).edgeSet.ncard := by
-sorry
+have h3: (symmDiff M p.toSubgraph).edgeSet = (symmDiff M p.toSubgraph).spanningCoe.edgeSet:= by exact rfl
+have h4: (symmDiff M p.toSubgraph).spanningCoe.edgeSet = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet:= by sorry
+have h5: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet = (symmDiff M p.toSubgraph).edgeSet:= by aesop
+aesop
 
+lemma FiniteSubgraphFiniteEdgeSet{M:G.Subgraph}[Finite V]: Finite M.edgeSet := by
+  have h1: Fintype (Sym2 M.verts):= by exact Fintype.ofFinite (Sym2 ↑M.verts)
+  have h2: DecidableRel M.Adj := by exact Classical.decRel M.Adj
+  exact Subtype.finite
+
+
+lemma FiniteSubgraphencardEqncard{M:G.Subgraph}[Finite V]: M.edgeSet.encard = M.edgeSet.ncard := by
+  have h1: Finite M.edgeSet:= by exact FiniteSubgraphFiniteEdgeSet
+  have h2: M.edgeSet.encard = M.edgeSet.ncard:= by exact Eq.symm (Set.Finite.cast_ncard_eq h1)
+  exact h2
 
 
 theorem IfBerge{M:G.Subgraph}{h: M.IsMatching}[Finite V]:
@@ -39,7 +58,14 @@ theorem IfBerge{M:G.Subgraph}{h: M.IsMatching}[Finite V]:
   intro hc
   obtain ⟨hn,hc⟩ := hc
   let M':= (symmDiff M p.toSubgraph)
-  have hc: ¬(M'.IsMatching ∧ M.edgeSet.ncard < M'.edgeSet.ncard):= by sorry
+  have hc: ¬(M'.IsMatching ∧ M.edgeSet.encard < M'.edgeSet.encard):= by aesop
+  have hc: ¬(M'.IsMatching ∧ M.edgeSet.ncard < M'.edgeSet.ncard):= by
+    simp_all only [ not_and, not_lt]
+    intro a
+    simp_all only [forall_const]
+    have hen1: M.edgeSet.encard = M.edgeSet.ncard:= by exact FiniteSubgraphencardEqncard
+    have hen2: M'.edgeSet.encard = M'.edgeSet.ncard:= by exact FiniteSubgraphencardEqncard
+    aesop
   have hm1: M'.IsMatching:= by exact symmDiff_M_p_is_matching M u v p h h1
   have hm2: M.edgeSet.ncard < M'.edgeSet.ncard:= by
     have hi: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet.ncard > M.edgeSet.ncard:= by
