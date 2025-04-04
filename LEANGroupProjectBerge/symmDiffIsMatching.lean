@@ -142,3 +142,39 @@ lemma symmDiff_M_p_is_matching [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V
       )
   have h7: hM.IsMatching := h6
   h7
+
+
+
+lemma forall_xy_adj_in_m'_and_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v : V ) (p: G.Walk u v) (h3: M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe))(h5: hM = (toSubgraph M' (m'_is_subgraph_of_g M M' u v p h3)).induce M'.support): ∀ x y:V, M'.Adj x y ↔ hM.Adj x y := by
+  intro x y
+  exact xy_adj_in_m'_and_hm M hM M' u v x y p h3 h5
+
+
+lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v x y : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M) (h3: M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe))(h5: hM = (toSubgraph M' (m'_is_subgraph_of_g M M' u v p h3)).induce M'.support): M'.edgeSet.ncard = hM.edgeSet.ncard :=
+  have h6: ∀ x y:V, M'.Adj x y ↔ hM.Adj x y := forall_xy_adj_in_m'_and_hm M hM M' u v p h3 h5
+  have h7: ∀ x y:V, s(x,y)∈ M'.edgeSet ↔ s(x,y)∈ hM.edgeSet := by
+    intro x y
+    exact (
+      { mp :=
+          fun h8: s(x,y)∈ M'.edgeSet =>
+          have h9: M'.Adj x y := h8
+          have h10: hM.Adj x y := Iff.mp (forall_xy_adj_in_m'_and_hm M hM M' u v p h3 h5 x y) h9
+          have h11: s(x,y)∈ hM.edgeSet := h10
+          h11
+        mpr :=
+          fun h8: s(x,y)∈ hM.edgeSet =>
+          have h9: hM.Adj x y := h8
+          have h10: M'.Adj x y := Iff.mpr (forall_xy_adj_in_m'_and_hm M hM M' u v p h3 h5 x y) h9
+          have h11: s(x,y)∈ M'.edgeSet := h10
+          h11
+        }
+    )
+  have h8: M'.edgeSet = hM.edgeSet := sorry
+  have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := sorry
+  h9
+
+
+
+
+lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
+    sorry
