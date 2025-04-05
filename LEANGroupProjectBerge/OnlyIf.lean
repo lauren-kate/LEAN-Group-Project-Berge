@@ -40,11 +40,11 @@ have h: ∀x y, (symmDiff H₁.spanningCoe H₂.spanningCoe).Adj x y ↔ (symmDi
   · intro a
     sorry
   · intro a
+    refine top_adj.mp ?_
+    --have h': x ≠ y:= by exact Adj.ne a
     sorry
+
 aesop
-
-
-
 
 
 lemma SymmDiffSpanningCoeEqualsMatching [Finite V] {u v : V} {p : G.Walk u v}:
@@ -57,10 +57,12 @@ have h4: (symmDiff M p.toSubgraph).spanningCoe.edgeSet = (symmDiff M.spanningCoe
 have h5: (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).edgeSet = (symmDiff M p.toSubgraph).edgeSet:= by aesop
 aesop
 
+
 lemma FiniteSubgraphFiniteEdgeSet{M:G.Subgraph}[Finite V]: Finite M.edgeSet := by
   have h1: Fintype (Sym2 M.verts):= by exact Fintype.ofFinite (Sym2 ↑M.verts)
   have h2: DecidableRel M.Adj := by exact Classical.decRel M.Adj
   exact Subtype.finite
+
 
 lemma FiniteSubgraphencardEqncard{M:G.Subgraph}[Finite V]: M.edgeSet.encard = M.edgeSet.ncard := by
   have h1: Finite M.edgeSet:= by exact FiniteSubgraphFiniteEdgeSet
