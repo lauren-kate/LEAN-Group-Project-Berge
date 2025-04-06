@@ -9,6 +9,8 @@ import Mathlib.Order.SymmDiff
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.SymmDiff
 import Mathlib.Logic.ExistsUnique
+import Mathlib.Data.Sym.Sym2
+import Mathlib.Data.Set.Card
 
 import LEANGroupProjectBerge.Basic
 import LEANGroupProjectBerge.outsideOfPath
@@ -169,12 +171,36 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
           h11
         }
     )
-  have h8: M'.edgeSet = hM.edgeSet := sorry
-  have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := sorry
-  h9
+
+  have h39: ∀ a :  (Sym2 V), a ∈ M'.edgeSet ↔ a ∈ hM.edgeSet := Iff.mpr (Sym2.forall)  h7
+  --have h40: M'.edgeSet = hM.edgeSet :=
+
+  have h41: M'.edgeSet ⊆ hM.edgeSet :=
+    have h42: ∀ a :  (Sym2 V), a ∈ M'.edgeSet →  a ∈ hM.edgeSet := by
+      intro a
+      exact Iff.mp (h39 a)
+        /-exact (
+          have h43: a ∈ M'.edgeSet →  a ∈ hM.edgeSet := Iff.mp (h39 a)
+          h43
+        )-/
+
+    have h43: M'.edgeSet ⊆ hM.edgeSet := h42
+    h43
+
+  have h42: hM.edgeSet ⊆ M'.edgeSet :=
+    have h43: ∀ a :  (Sym2 V), a ∈ hM.edgeSet →  a ∈ M'.edgeSet := by
+      intro a
+      exact Iff.mpr (h39 a)
+    have h44: hM.edgeSet ⊆ M'.edgeSet := h43
+    h44
+  have h43: M'.edgeSet = hM.edgeSet := Set.eq_of_subset_of_subset h41 h42
+    --h43
+  --Set.eq_of_forall_subset_iff h39
 
 
-
-
-lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
-    sorry
+  have hM' : M'.edgeSet.Finite := by toFinite_tac
+  have hhM : hM.edgeSet.Finite := by toFinite_tac
+  have h44: hM.edgeSet.ncard ≤ M'.edgeSet.ncard := Set.ncard_le_ncard h42 hM'
+  have h45: M'.edgeSet.ncard ≤ hM.edgeSet.ncard := Set.ncard_le_ncard h41 hhM
+  have h43: M'.edgeSet.ncard = hM.edgeSet.ncard := Nat.le_antisymm h45 h44
+  h43
