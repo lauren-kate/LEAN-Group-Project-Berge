@@ -43,9 +43,40 @@ lemma cons_last_edge (p : F.Walk v w) (h_adj : F.Adj u v) (h_nnil : p.edges ≠ 
   simp_all only [edges_cons, ne_eq, not_false_eq_true, List.getLast_cons]
 
 
-lemma trail_cons_alt_edge {p : F.Walk v w} (h_alt : p.alternates M) (h_adj : F.Adj u v) (h_nnil : p.edges ≠ []) :
-    (cons h_adj p).IsTrail → ( p.edges.head h_nnil ∈ M.edgeSet ↔ (cons h_adj p).edges.head (by aesop) ∉ M.edgeSet ) := by
+lemma trail_cons_alt_edge {p : F.Walk v w}  (h_adj : F.Adj u v) (h_nnil : p.edges ≠ []) :
+    (cons h_adj p).alternates M →
+    (cons h_adj p).IsTrail →
+    ( p.edges.head h_nnil ∈ M.edgeSet ↔ (cons h_adj p).edges.head (by aesop) ∉ M.edgeSet ) := by
+  intro h_alt h_tr
+  have : ∃ w x y : V, w≠y ∧ s(w,x) = (cons h_adj p).edges.head (by aesop) ∧ s(x,y) = p.edges.head h_nnil := by
+    cases p with
+    | nil => contradiction
+    | cons h_adj' q =>
+      rename V => v'
+      exists u, v, v'
+      have : u ≠ v' := by intro h; aesop
+      exact ⟨this, rfl, rfl⟩
+  obtain ⟨w,x,y, h_wy, h_wx_eq, h_xy_eq⟩ := this
+  rw[←h_wx_eq, ←h_xy_eq]
+  have h_wx_e : s(w,x) ∈ (cons h_adj p).edges := by aesop
+  have h_wy_e : s(x,y) ∈ (cons h_adj p).edges := by aesop
+  exact iff_not_comm.mp <| h_alt h_wy h_wx_e h_wy_e
+
+
+lemma trail_cons_edgeset_ncard {p : F.Walk v w} {h_adj : F.Adj u v} (h_tr : (cons h_adj p).IsTrail) :
+    (cons h_adj p).edgeSet.ncard = p.edgeSet.ncard + 1 := by
   sorry
+
+
+lemma trail_cons_edgeset_inter_ncard_plus {s : Set (Sym2 V)} {p : F.Walk v w} {h_adj : F.Adj u v} (h_tr : (cons h_adj p).IsTrail) (h_mem : s(u,v) ∈ s) :
+    (s ∩ (cons h_adj p).edgeSet).ncard = (s ∩ p.edgeSet).ncard + 1 := by
+  sorry
+
+
+lemma trail_cons_edgeset_inter_ncard_eq {s : Set (Sym2 V)} {p : F.Walk v w} {h_adj : F.Adj u v} (h_tr : (cons h_adj p).IsTrail) (h_mem : s(u,v) ∉ s) :
+    (s ∩ (cons h_adj p).edgeSet).ncard = (s ∩ p.edgeSet).ncard := by
+  sorry
+
 
 
 mutual
@@ -65,13 +96,11 @@ mutual
       else
         have ih := alt_ends_unmatch_unmatch q (IsTrail.of_cons h_tr) (alt_of_cons' h_alt) h_q_nil
         have h_pq_end : q.edges.getLast h_q_nil = p.edges.getLast h_nnil := q.cons_last_edge h_adj h_q_nil
-        have : q.edges.head h_q_nil ∉ M.edgeSet := (iff_not_comm.mp (trail_cons_alt_edge (alt_of_cons' h_alt) h_adj h_q_nil h_tr)).mp h_fst_match
+        have : q.edges.head h_q_nil ∉ M.edgeSet := (iff_not_comm.mp (trail_cons_alt_edge h_adj h_q_nil h_alt h_tr)).mp h_fst_match
         specialize ih (h_pq_end ▸ h_lst_unmatch) this
         show p.edgeSet.ncard = 2*(M.edgeSet ∩ p.edgeSet).ncard
-        have : p.edgeSet.ncard = q.edgeSet.ncard + 1:= by
-          sorry
-        have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard + 1 := by
-          sorry
+        have : p.edgeSet.ncard = q.edgeSet.ncard + 1 := trail_cons_edgeset_ncard h_tr
+        have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard + 1 := trail_cons_edgeset_inter_ncard_plus h_tr h_fst_match
         omega
 
 
@@ -97,13 +126,11 @@ mutual
       else
         have ih := alt_ends_match_unmatch q (IsTrail.of_cons h_tr) (alt_of_cons' h_alt) h_q_nil
         have h_pq_end : q.edges.getLast h_q_nil = p.edges.getLast h_nnil := q.cons_last_edge h_adj h_q_nil
-        have : q.edges.head h_q_nil ∈ M.edgeSet := (trail_cons_alt_edge (alt_of_cons' h_alt) h_adj h_q_nil h_tr).mpr h_fst_unmatch
+        have : q.edges.head h_q_nil ∈ M.edgeSet := (trail_cons_alt_edge h_adj h_q_nil h_alt h_tr).mpr h_fst_unmatch
         specialize ih (h_pq_end ▸ h_lst_unmatch) this
         show p.edgeSet.ncard = 2*(M.edgeSet ∩ p.edgeSet).ncard + 1
-        have : p.edgeSet.ncard = q.edgeSet.ncard + 1:= by
-          sorry
-        have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard := by
-          sorry
+        have : p.edgeSet.ncard = q.edgeSet.ncard + 1 := trail_cons_edgeset_ncard h_tr
+        have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard := trail_cons_edgeset_inter_ncard_eq h_tr h_fst_unmatch
         omega
 end
 
@@ -151,13 +178,11 @@ theorem alt_ends_match_match [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Wal
       | cons h_adj' r => contradiction
     else
       have h_pq_end : q.edges.getLast h_q_nil = p.edges.getLast h_nnil := q.cons_last_edge h_adj h_q_nil
-      have : q.edges.head h_q_nil ∉ M.edgeSet := (iff_not_comm.mp (trail_cons_alt_edge (alt_of_cons' h_alt) h_adj h_q_nil h_tr)).mp h_fst_match
+      have : q.edges.head h_q_nil ∉ M.edgeSet := (iff_not_comm.mp (trail_cons_alt_edge h_adj h_q_nil h_alt h_tr)).mp h_fst_match
       have ih := alt_ends_unmatch_match q (IsTrail.of_cons h_tr) (alt_of_cons' h_alt) h_q_nil (h_pq_end ▸ h_lst_match) this
       show p.edgeSet.ncard + 1 = 2*(M.edgeSet ∩ p.edgeSet).ncard
-      have : p.edgeSet.ncard = q.edgeSet.ncard + 1 := by
-        sorry
-      have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard + 1 := by
-        sorry
+      have : p.edgeSet.ncard = q.edgeSet.ncard + 1 := trail_cons_edgeset_ncard h_tr
+      have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard + 1 := trail_cons_edgeset_inter_ncard_plus h_tr h_fst_match
       omega
 
 end Walk
