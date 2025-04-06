@@ -171,36 +171,27 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
           h11
         }
     )
+  have h8: ∀ a :  (Sym2 V), a ∈ M'.edgeSet ↔ a ∈ hM.edgeSet := Iff.mpr (Sym2.forall)  h7
 
-  have h39: ∀ a :  (Sym2 V), a ∈ M'.edgeSet ↔ a ∈ hM.edgeSet := Iff.mpr (Sym2.forall)  h7
-  --have h40: M'.edgeSet = hM.edgeSet :=
-
-  have h41: M'.edgeSet ⊆ hM.edgeSet :=
-    have h42: ∀ a :  (Sym2 V), a ∈ M'.edgeSet →  a ∈ hM.edgeSet := by
+  have h9: M'.edgeSet ⊆ hM.edgeSet :=
+    have h10: ∀ a :  (Sym2 V), a ∈ M'.edgeSet →  a ∈ hM.edgeSet := by
       intro a
-      exact Iff.mp (h39 a)
-        /-exact (
-          have h43: a ∈ M'.edgeSet →  a ∈ hM.edgeSet := Iff.mp (h39 a)
-          h43
-        )-/
+      exact Iff.mp (h8 a)
 
-    have h43: M'.edgeSet ⊆ hM.edgeSet := h42
-    h43
+    have h11: M'.edgeSet ⊆ hM.edgeSet := h10
+    h11
 
-  have h42: hM.edgeSet ⊆ M'.edgeSet :=
-    have h43: ∀ a :  (Sym2 V), a ∈ hM.edgeSet →  a ∈ M'.edgeSet := by
+  have h10: hM.edgeSet ⊆ M'.edgeSet :=
+    have h11: ∀ a :  (Sym2 V), a ∈ hM.edgeSet →  a ∈ M'.edgeSet := by
       intro a
-      exact Iff.mpr (h39 a)
-    have h44: hM.edgeSet ⊆ M'.edgeSet := h43
-    h44
-  have h43: M'.edgeSet = hM.edgeSet := Set.eq_of_subset_of_subset h41 h42
-    --h43
-  --Set.eq_of_forall_subset_iff h39
-
+      exact Iff.mpr (h8 a)
+    have h12: hM.edgeSet ⊆ M'.edgeSet := h11
+    h12
+  have h11: M'.edgeSet = hM.edgeSet := Set.eq_of_subset_of_subset h9 h10
 
   have hM' : M'.edgeSet.Finite := by toFinite_tac
   have hhM : hM.edgeSet.Finite := by toFinite_tac
-  have h44: hM.edgeSet.ncard ≤ M'.edgeSet.ncard := Set.ncard_le_ncard h42 hM'
-  have h45: M'.edgeSet.ncard ≤ hM.edgeSet.ncard := Set.ncard_le_ncard h41 hhM
-  have h43: M'.edgeSet.ncard = hM.edgeSet.ncard := Nat.le_antisymm h45 h44
-  h43
+  have h12: hM.edgeSet.ncard ≤ M'.edgeSet.ncard := Set.ncard_le_ncard h10 hM'
+  have h13: M'.edgeSet.ncard ≤ hM.edgeSet.ncard := Set.ncard_le_ncard h9 hhM
+  have h14: M'.edgeSet.ncard = hM.edgeSet.ncard := Nat.le_antisymm h13 h12
+  h14
