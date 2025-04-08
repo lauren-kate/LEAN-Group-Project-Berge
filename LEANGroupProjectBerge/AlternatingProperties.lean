@@ -63,6 +63,7 @@ lemma trail_cons_alt_edge {p : F.Walk v w}  (h_adj : F.Adj u v) (h_nnil : p.edge
   exact iff_not_comm.mp <| h_alt h_wy h_wx_e h_wy_e
 
 
+-- if these turn out to need finiteness, just add [Finite V] to things until it works
 lemma trail_cons_edgeset_ncard {p : F.Walk v w} {h_adj : F.Adj u v} (h_tr : (cons h_adj p).IsTrail) :
     (cons h_adj p).edgeSet.ncard = p.edgeSet.ncard + 1 := by
   sorry
@@ -80,7 +81,7 @@ lemma trail_cons_edgeset_inter_ncard_eq {s : Set (Sym2 V)} {p : F.Walk v w} {h_a
 
 
 mutual
-  theorem alt_ends_match_unmatch [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
+  theorem alt_ends_match_unmatch {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
       (h_nnil : p.edges ≠ []) →
       p.edges.getLast h_nnil ∉ M.edgeSet →
       p.edges.head h_nnil ∈ M.edgeSet →
@@ -104,7 +105,7 @@ mutual
         omega
 
 
-  theorem alt_ends_unmatch_unmatch [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
+  theorem alt_ends_unmatch_unmatch {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
       (h_nnil : p.edges ≠ []) →
       p.edges.getLast h_nnil ∉ M.edgeSet →
       p.edges.head h_nnil ∉ M.edgeSet →
@@ -135,7 +136,7 @@ mutual
 end
 
 
-theorem alt_ends_unmatch_match [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
+theorem alt_ends_unmatch_match {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
     (h_nnil : p.edges ≠ []) →
     p.edges.getLast h_nnil ∈ M.edgeSet →
     p.edges.head h_nnil ∉ M.edgeSet →
@@ -157,7 +158,7 @@ theorem alt_ends_unmatch_match [Finite V] {F : SimpleGraph V} {u v : V} (p : F.W
   aesop
 
 
-theorem alt_ends_match_match [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
+theorem alt_ends_match_match {F : SimpleGraph V} {u v : V} (p : F.Walk u v) (h_tr : p.IsTrail) (h_alt : p.alternates M) :
     (h_nnil : p.edges ≠ []) →
     p.edges.getLast h_nnil ∈ M.edgeSet →
     p.edges.head h_nnil ∈ M.edgeSet →
@@ -184,5 +185,80 @@ theorem alt_ends_match_match [Finite V] {F : SimpleGraph V} {u v : V} (p : F.Wal
       have : p.edgeSet.ncard = q.edgeSet.ncard + 1 := trail_cons_edgeset_ncard h_tr
       have : (M.edgeSet ∩ p.edgeSet).ncard = (M.edgeSet ∩ q.edgeSet).ncard + 1 := trail_cons_edgeset_inter_ncard_plus h_tr h_fst_match
       omega
+
+
+theorem aug_path_end_unmatched {u v : V} {p : G.Walk u v} (h_nnil : p.edges ≠ []) (h_aug : v ∉ M.support) : p.edges.getLast h_nnil ∉ M.edgeSet := by
+  cases p with
+  | nil => contradiction
+  | cons h_adj q =>
+    let p := cons h_adj q
+    cases q with
+    | nil =>
+      intro h_contr
+      have : p.edges.getLast h_nnil = s(v,u) := by aesop
+      rw [this] at h_contr
+      exact h_aug ⟨u, h_contr⟩
+    | cons h_adj' r =>
+      let q := cons h_adj' r
+      have h_q_nnil : q.edges ≠ [] := by aesop
+      have ih := aug_path_end_unmatched h_q_nnil h_aug
+      have : p.edges.getLast h_nnil = q.edges.getLast h_q_nnil := by aesop
+      exact this ▸ ih
+
+
+theorem aug_path_edgeset_inter {p : G.Walk u v} (h : p.IsAugmentingPath M) :
+    p.edgeSet.ncard = 2*(M.edgeSet ∩ p.edgeSet).ncard + 1 := by
+      cases p with
+      | nil => exact False.elim <| h.ends_unsaturated.1 rfl
+      | cons h_adj q =>
+        rename V => w
+        let p := cons h_adj q
+        have : p.edges ≠ [] := by aesop
+        apply p.alt_ends_unmatch_unmatch h.toIsTrail h.alternates this
+        · exact aug_path_end_unmatched this h.ends_unsaturated.2.2
+        · show s(u,w) ∉ M.edgeSet
+          intro h_contr
+          exact h.ends_unsaturated.2.1 ⟨w, h_contr⟩
+
+
+
+theorem alt_cycle_nnil {p : G.Walk u u} (h : p.IsAlternatingCycle M) : p.edges ≠ [] := by
+  have := h.toIsCycle.ne_nil
+  cases p <;> aesop
+
+
+
+theorem alt_cycle_ends_alternate {p : G.Walk u u} (h : p.IsAlternatingCycle M) :
+    p.edges.head (alt_cycle_nnil h) ∈ M.edgeSet ↔ p.edges.getLast (alt_cycle_nnil h) ∉ M.edgeSet := by
+  cases p with
+  | nil => sorry
+  | cons h_p_adj q =>
+    rename V => v
+    let p := cons h_p_adj q
+    have h_p_nnil : p.edges ≠ [] := alt_cycle_nnil h
+    have h_rev_edges : ∀e ∈ p.reverse.edges, e ∈ p.edges := by aesop
+    have h_rev_head : p.reverse.edges.head (by aesop) = p.edges.getLast h_p_nnil := by
+      have : p.reverse.edges.head (by aesop) = p.edges.reverse.head (by aesop) := by simp
+      rw [this, List.getLast_eq_head_reverse h_p_nnil]
+    let pr := p.reverse
+    have hh : pr = p.reverse := rfl
+    cases pr with
+    | nil => sorry
+    | cons h_pr_adj o =>
+      rename V => t
+      sorry
+
+
+
+
+
+theorem alt_cycle_edgeset_inter {p : G.Walk u u} (h_altc : p.IsAlternatingCycle M) :
+    p.edgeSet.ncard = 2*(M.edgeSet ∩ p.edgeSet).ncard := by
+  have h_nnil := alt_cycle_nnil h_altc
+  if h : p.edges.head h_nnil ∈ M.edgeSet then
+    exact alt_ends_match_unmatch p h_altc.toIsTrail h_altc.alternates h_nnil ((alt_cycle_ends_alternate h_altc).mp h) h
+  else
+    exact alt_ends_unmatch_match p h_altc.toIsTrail h_altc.alternates h_nnil ((Iff.not_left <| alt_cycle_ends_alternate h_altc).mp h) h
+
 
 end Walk
