@@ -44,6 +44,9 @@ def edgeSet (p : F.Walk u v) : Set (Sym2 V) :=
   {e : Sym2 V | e ∈ p.edges}
 
 
+theorem edgeSet_toSubgraph_eq (p : F.Walk u v) : p.edgeSet = p.toSubgraph.edgeSet :=
+  Eq.symm p.edgeSet_toSubgraph
+
 
 end Walk
 
@@ -69,9 +72,6 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
   ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
 
 
--- This should go in another file
---theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
---  sorry
 
 
 
