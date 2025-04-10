@@ -169,8 +169,10 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
           h11
         }
     )
-  have h8: M'.edgeSet = hM.edgeSet := sorry
-  have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := sorry
+  have h8: M'.edgeSet = hM.edgeSet := by
+    apply?
+
+  have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := by exact congrArg Set.ncard h8
   h9
 
 
