@@ -22,25 +22,8 @@ theorem cycle_is_even(M' : G.Subgraph) (hm : M.IsMatching) (hm' : M'.IsMatching)
   let F := (symmDiff M.spanningCoe M'.spanningCoe)
   sorry
 
--- theorem component_is_alt (M' : G.Subgraph) (hm : M.IsMatching) (hm' : M'.IsMatching):
--- ∀(cc : (symmDiff M.spanningCoe M'.spanningCoe).ConnectedComponent), (cc.componentAltPath M) ∨ (cc.componentAltCycle M):=
---   sorry
-
 theorem cycle_eq_in_symm_diff [Finite V] (M' : G.Subgraph) (hm : M.IsMatching) (hm' : M'.IsMatching) (p : F.Walk u v):
 ∀ (p : (symmDiff M.spanningCoe M'.spanningCoe).Walk u u ), p.IsCycle → (p.edgeSet ∩ M.edgeSet).ncard = (p.edgeSet ∩ M'.edgeSet).ncard := by
-  -- intro
-  -- let e := s(u, p.getVert 1)
-  -- have h1:  p.toDeleteEdges {e} :=
-  -- cases p with
-  --   | nil => contradiction
-  --   | cons h q =>
-
-
-
-  -- let q := p.toDeleteEdges {e}
-
-  -- --have h1: s(u, w) ∈ M.edgeSet ∧ s(u, w) ∈ q.edgeSet → s(z, v) ∈ M.edgeSet ∧ s(z, v) ∈ q.edgeSet :=
-  -- have h1: ((s(u, q.getVert 1) ∈ M.edgeSet) → q.edges.getLast ∈ M.edgeSet) ∧  ((s(u, q.getVert 1) ∈ M'.edgeSet) → q.edges.getLast ∈ M'.edgeSet):=
   sorry
 
 namespace SimpleGraph
@@ -71,6 +54,78 @@ theorem m'_iff_not_m (M': SimpleGraph V) (P: G.Walk u v) (hM': M'=(symmDiff M.sp
     have h14: P.toSubgraph.spanningCoe.Adj h1 h2 ∧ ¬M.spanningCoe.Adj h1 h2 := And.intro h3 h13
     have h15: M'.Adj h1 h2 := by aesop
     assumption
+
+-- Classical
+namespace Walk
+
+lemma help (P: G.Walk u v) (h1: u ≠ v):
+P.length > 1 ∨ P.length = 1 := sorry
+
+theorem unique_edge_in_m' (hm : M.IsMatching) (M': SimpleGraph V) (P: G.Walk u v) (hp: P.IsAugmentingPath M) (hM': M'=(symmDiff M.spanningCoe P.toSubgraph.spanningCoe)) :
+∀ (w : V), w ∈ P.support → ∃!(x : V), x ∈ P.support → s(w,x) ∈ M'.edgeSet := by
+  intro h1 h2
+  unfold ExistsUnique
+  have h3: u≠v ∧ u ∉ M.support ∧ v ∉ M.support := hp.ends_unsaturated
+  have h4 : u ≠ v := by aesop
+  --have h67: P.vertexSet.ncard > 1 := by aesop
+  have h5: P.length > 1 ∨ P.length = 1 := help P h4
+  cases h5 with
+  | inl h5l =>
+    unfold h3 at hp
+    let a := P.support.next h1 h2
+    have h6: G.Adj h1 a :=  sorry --P.adj_getVert_succ
+    have h7: s(h1,a) ∈ P.edgeSet := by sorry
+    sorry
+  | inr h5r =>
+    have h12: P.vertexSet.ncard = 2 := by sorry
+    have h13: G.Adj u v := P.adj_of_length_eq_one h5r
+    have h14: P.length <= 1:= by aesop
+    have h15: P.getVert 1 = v := P.getVert_of_length_le h14
+    cases P with
+    | nil => contradiction
+    | cons h q =>
+      have h77: (cons h q).length = q.length + 1 := length_cons h q
+      have h78: (cons h q).length = 1 := h5r
+      have h79: q.length = 0 := by aesop
+      have h80: q.Nil.nil := by aesop
+      have h81: q = Walk.nil := h80 @Nil.eq_nil -- nil_iff_eq_nil.mp
+
+    -- have h17: singleton P h13 := sorry
+      have h34: (cons h q) = Walk.cons h Nil :=
+      have h16: (cons h q) = h.toWalk := by exact -- P.singleton_coe h13 --mk'_mem_edges_singleton
+    sorry
+
+
+
+theorem unique_edge_in_m'_new (hm : M.IsMatching) (M': SimpleGraph V) (P: G.Walk u v) (hp: P.IsAugmentingPath M) (hM': M'=(symmDiff M.spanningCoe P.toSubgraph.spanningCoe)) :
+∀ (w : V), w ∈ P.support → ∃!(x : V), x ∈ P.support → s(w,x) ∈ M'.edgeSet := by
+  intro h1 h2
+  unfold ExistsUnique
+  have h3: u≠v ∧ u ∉ M.support ∧ v ∉ M.support := hp.ends_unsaturated
+  have h4 : u ≠ v := by aesop
+  cases P with
+  | nil => contradiction
+  | cons h q =>
+  sorry
+
+  -- exact
+  -- have h3: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ P.edges → s(x,y) ∈ P.edges → (M.Adj w x ↔ ¬M.Adj x y) := hp.alternates
+  -- have h4: P.vertexSet.ncard > 1 := by exact
+  -- let z:V := z ∈ P.support
+  -- have h5: y ∈ P.support ∧ s(h1,y) ∈ P.edges :=
+
+
+  --unfold P.IsAugmentingPath at hp
+  --have h3: P.IsAlternatingPath := by aesop
+  --have h4: Exists.intro (b:V) h5
+  -- #check @Exists.intro
+
+end Walk
+
+theorem exists_distinct (P: G.Walk u v) (hp: P.IsAugmentingPath M) :
+∃(w x: V), w ∈ P.support ∧ x ∈ P.support ∧ w ≠ x := by
+  sorry
+
 end SimpleGraph
 
 
