@@ -38,17 +38,13 @@ theorem cycle_comp_M_M'_edges_ncard_eq [Finite V] (c : (symmDiff M.spanningCoe M
     apply Set.ncard_union_eq this
   have h_symmdiff : p.edgeSet \ M.edgeSet = p.edgeSet ∩ M'.edgeSet := walk_symmdiff_subgraph_sdiff_eq p
   rw [h_p.3, ←h_symmdiff]
-  rw[Set.inter_comm, h_disjoint] at h_pm_inter
+  rw [Set.inter_comm, h_disjoint] at h_pm_inter
   omega
 
 
-variable (h_M_match : M.IsMatching)
-variable (h_M'_match : M'.IsMatching)
-variable (h_e_gt : M'.edgeSet.ncard > M.edgeSet.ncard)
 
 
-include h_M_match h_M'_match h_e_gt
-theorem matching_symmdiff_alt_path_edgeset_ncard_gt [Finite V] :
+theorem matching_symmdiff_alt_path_edgeset_ncard_gt [Finite V] (h_M_match : M.IsMatching) (h_M'_match : M'.IsMatching) (h_e_gt : M'.edgeSet.ncard > M.edgeSet.ncard):
     ∃c:(symmDiff M.spanningCoe M'.spanningCoe).ConnectedComponent, c.componentAltPath M ∧ (c.edgeSet ∩ M'.edgeSet).ncard > (c.edgeSet ∩ M.edgeSet).ncard := by
   let F := symmDiff M.spanningCoe M'.spanningCoe
   obtain ⟨c, h_c⟩ := ex_component_intersection_lt h_e_gt <| @rfl _ F
@@ -57,3 +53,18 @@ theorem matching_symmdiff_alt_path_edgeset_ncard_gt [Finite V] :
     have := cycle_comp_M_M'_edges_ncard_eq c h_cyc
     omega
   | inr h_path => exists c
+
+
+
+
+
+-- exists an augmenting path in F
+theorem matching_symmdiff_gt_aug [Finite V] (h_M_match : M.IsMatching) (h_M'_match : M'.IsMatching) (h_e_gt : M'.edgeSet.ncard > M.edgeSet.ncard):
+    ∃ (u v : V) (p : (symmDiff M.spanningCoe M'.spanningCoe).Walk u v), p.IsAugmentingPath M := by
+  sorry
+
+
+-- exists an augmenting path in G
+theorem matching_not_max_aug [Finite V] (h_M_match : M.IsMatching) (h_M_nmax : ¬M.IsMaximumMatching) :
+    ∃ (u v : V) (p : G.Walk u v), p.IsAugmentingPath M := by
+  sorry
