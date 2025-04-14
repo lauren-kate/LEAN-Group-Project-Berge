@@ -70,7 +70,57 @@ theorem walk_nil_empty_edgeset {u v : V} ( p : F.Walk u v) (h_uv : u=v) (h_p : p
 
 
 
+theorem walk_component_reverse {u v : V } {p : F.Walk u v} {c : F.ConnectedComponent} (h_p : p.IsAltPathComponent M c) :
+    p.reverse.IsAltPathComponent M c := by
+  let pr := p.reverse
+  have h_p_path := h_p.toIsPath
+  have : pr.IsPath := (Walk.isPath_reverse_iff p).mpr h_p_path
+  constructor; exact ⟨this, p.alt_of_reverse h_p.alternates⟩
+  · rw[←p.reverse_vertexset_eq]
+    exact h_p.vertices_eq
+  · rw[←p.reverse_edgeset_eq]
+    exact h_p.edges_eq
 
+
+
+open Walk
+
+theorem alt_path_comp_head_unsaturated {u v : V} {p : (symmDiff M.spanningCoe M'.spanningCoe).Walk u v} {c : (symmDiff M.spanningCoe M'.spanningCoe).ConnectedComponent}
+    (h_p : p.IsAltPathComponent M c) (h_p_nnil : p.edges ≠ []) (h_head : p.edges.head h_p_nnil ∉ M.edgeSet) (h_match : M'.IsMatching) : u ∉ M.support := by
+  intro h_contr
+  cases p with
+  | nil => aesop
+  | cons h_adj q =>
+    rename V => y
+    let p := cons h_adj q
+    have h_uy_m : s(u,y) ∉ M.edgeSet := by aesop
+    have h_uy_m' : s(u,y) ∈ M'.edgeSet := by
+      cases h_adj with
+      | inl h =>
+        simp at h; aesop
+      | inr h =>
+        simp at h; aesop
+    obtain ⟨z, h_uz⟩ := h_contr
+    have h_yz : y≠z := fun h => h_uy_m <| h ▸ h_uz
+    have h_uz_m' : s(u,z) ∉ M'.edgeSet := by
+      if h : u ∈ M'.verts then
+        intro h'
+        unfold Subgraph.IsMatching at h_match
+        obtain ⟨y', _, h_y'_uq ⟩ := h_match h
+        exact h_yz <| Eq.trans (h_y'_uq y h_uy_m') (h_y'_uq z h').symm
+      else
+        exact fun h' => h <| M'.edge_vert h'
+    let F := symmDiff M.spanningCoe M'.spanningCoe
+    have h_uz_f : F.Adj u z := by left; aesop
+    have h_uz_c : s(u,z) ∈ c.edgeSet := by
+      have h_uz_comp_eq: F.connectedComponentMk z = F.connectedComponentMk u := ConnectedComponent.connectedComponentMk_eq_of_adj (adj_symm F h_uz_f)
+      have h_u_c : u ∈ c.supp := h_p.vertices_eq ▸ p.start_mem_support
+      have h_z_c : z ∈ c.supp := by unfold ConnectedComponent.supp; rw[←h_u_c]; exact h_uz_comp_eq
+      exact ⟨h_u_c, h_z_c, h_uz_f⟩
+    rw[h_p.edges_eq] at h_uz_c
+    have : u ∈ q.support := @fst_mem_support_of_mem_edges _ _ u z _ _ q (by cases (@List.mem_cons _ s(u,y) q.edges s(u,z)).mp h_uz_c <;> aesop)
+    have : ¬p.support.Nodup  := List.not_nodup_cons_of_mem this
+    exact this h_p.support_nodup
 
 
 
@@ -102,7 +152,15 @@ theorem matching_symmdiff_gt_aug [Finite V] (h_M_match : M.IsMatching) (h_M'_mat
         omega
       else
         have := p.alt_ends_unmatch_unmatch h_p.toIsTrail h_p.alternates h_p_nnil h_end h_head
-        sorry -- both end edges unmatched; prove end *vertices* are unsaturated
+        exists u, v, p
+        have h_u_unsat : u ∉ M.support := alt_path_comp_head_unsaturated h_p h_p_nnil h_head h_M'_match
+        have h_v_unsat : v ∉ M.support := by
+          have : p.reverse.edges ≠ [] := by aesop
+          apply alt_path_comp_head_unsaturated (walk_component_reverse h_p) this
+          simp; aesop;
+          exact h_M'_match
+        exact ⟨h_p.toIsAlternatingPath, h_uv, h_u_unsat, h_v_unsat⟩
+
 
 
 -- exists an augmenting path in G

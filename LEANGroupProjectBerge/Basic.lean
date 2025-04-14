@@ -215,6 +215,14 @@ theorem cons_vertexset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p
     aesop
 
 
+-- a walk has the same vertex set as its reverse
+theorem reverse_vertexset_eq (p : G.Walk u v) : p.vertexSet = p.reverse.vertexSet := by
+  apply Set.ext; intro x
+  unfold vertexSet
+  rw[support_reverse]
+  exact List.mem_reverse.symm
+
+
 -- if two walks have the same list of edges, they have the same edgeset
 theorem edges_edgeset_eq (p : G.Walk u v) (q : F.Walk u v) : p.edges=q.edges → p.edgeSet=q.edgeSet := by
   intro h
@@ -241,6 +249,12 @@ theorem cons_edgeset (p : G.Walk w x) (h_adj : G.Adj v w) : (Walk.cons h_adj p).
     apply List.mem_cons.mpr
     cases h_ab <;> aesop
 
+-- a walk has the same edge set as its reverse
+theorem reverse_edgeset_eq (p : G.Walk u v) : p.edgeSet = p.reverse.edgeSet := by
+  apply Set.ext; intro x
+  unfold edgeSet
+  rw[edges_reverse]
+  exact List.mem_reverse.symm
 
 -- can be used to provide a walk between an intermediary vertex and the end vertex
 theorem support_vertex_walk (p : F.Walk u v) : w ∈ p.support → Nonempty (F.Walk w v) := by
