@@ -22,8 +22,8 @@ lemma EndsAugPathMeansNotInM {M :G.Subgraph}{p: G.Walk u v}
 (h2: p.IsAugmentingPath M):
 ∀x ∈ p.support,(x=u ∨ x = v) → x ∉ M.support:= by
 intro x hp
-· intro huv
-  cases huv with
+intro huv
+cases huv with
   | inl h =>
     subst x
     exact h2.ends_unsaturated.right.left
@@ -66,6 +66,30 @@ lemma PathNotConnectedToOutsideOfPath{p: G.Walk u v}
   have h8: ¬ p.toSubgraph.Adj x y:= by exact fun a ↦ h7 x (id (SimpleGraph.Subgraph.adj_symm p.toSubgraph a))
   exact h8
 
+lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.verts:= by
+  have h4: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by
+    exact h1.alternates
+  simp_all only [not_or, ne_eq]
+  obtain ⟨h2l, h2r⟩ := h2
+  have h5: u ≠ v:= by exact h1.ends_unsaturated.left
+  have h6: ∃w, s(w,x) ∈ p.edges:= by sorry
+  sorry
+
+
+
+lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M)(h3:x ∈ p.support):
+∀z, M.Adj x z → p.toSubgraph.Adj x z:= by
+  intro z h4
+  have h5: p.length> 0:= by
+    have h6: p.length = 0 ↔ u = v:= by
+      sorry
+    have h7: u ≠ v:= by exact h2.ends_unsaturated.left
+    have h8: p.length ≠ 0:= by aesop
+    sorry
+  sorry
+
 
 
 
@@ -75,26 +99,26 @@ lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
   ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y
 := by
 intro x y h3 h4
+have h10: ¬p.toSubgraph.Adj x y := by exact PathNotConnectedToOutsideOfPath h4
+have h11: ¬p.toSubgraph.spanningCoe.Adj x y := by exact h10
 by_cases h5: (x=u ∨ x = v)
-· have h6: x ∉ M.support:= by
-    revert x
-    exact fun x h3 h5 ↦ EndsAugPathMeansNotInM h2 x h3 h5
-  have h8: ¬M.Adj x y:= by exact EndsNotConnectedToMatching h2 h5
+· have h8: ¬M.Adj x y:= by exact EndsNotConnectedToMatching h2 h5
   have h9: ¬M.spanningCoe.Adj x y := by exact h8
-  have h10: ¬p.toSubgraph.Adj x y := by exact PathNotConnectedToOutsideOfPath h4
-  have h11: ¬p.toSubgraph.spanningCoe.Adj x y := by exact h10
   unfold symmDiff
   intro a
   cases a with
   |inl a => aesop
   |inr a => aesop
-· have h5: x ∈ M.verts:= by sorry
-  have h6: ∃!z, M.Adj x z:= by aesop
-  unfold symmDiff
+· unfold symmDiff
   intro a
   cases a with
-  |inl a => sorry
-  |inr a => sorry
+  |inl a =>
+    have h5: x ∈ M.verts:= by exact InPathNotEndpointinMatching h2 h5 h3
+    have h6: M.Adj x y := by aesop
+    have h7: ∃!z, M.Adj x z := by aesop
+    have h8: ∀z, M.Adj x z → p.toSubgraph.Adj x z:= by exact fun z a ↦ PathVertexAdjMatchingThenPath h1 h2 h3 z a
+    simp_all
+  |inr a => aesop
 
 
 
