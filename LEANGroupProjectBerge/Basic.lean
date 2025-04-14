@@ -9,6 +9,7 @@ import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 
 namespace SimpleGraph
@@ -174,6 +175,28 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
 
 
 namespace Walk
+
+theorem NotpSupportNotEdge(p:G.Walk u v):
+w ∉ p.support →  ∀x,s(x,w) ∉ p.edges:= by
+  intro h1 x h2
+  have h3: s(x,w) ∈ p.edgeSet:= by exact h2
+  have h4: s(x,w) ∈ p.toSubgraph.edgeSet:=by exact (mem_edges_toSubgraph p).mpr h2
+  have h5: w ∈ p.toSubgraph.support:= by
+    refine (Subgraph.mem_support p.toSubgraph).mpr ?_
+    use x
+    exact Subgraph.adj_symm p.toSubgraph h4
+  have h6: w ∈ p.support:= by exact snd_mem_support_of_mem_edges p h2
+  contradiction
+
+
+lemma AdjImpInEdgeSet{G: SimpleGraph V}: G.Adj x w ↔ s(x,w) ∈ G.edgeSet:=by
+exact Eq.to_iff rfl
+
+lemma InPathSubgraphIffInPath{p: G.Walk u v}: s(x,w) ∈ p.toSubgraph.edgeSet ↔ s(x,w) ∈ p.edgeSet:= by
+  apply Iff.intro
+  · aesop
+  · aesop
+
 
 -- if two walks have the same list of vertices, they have the same vertex set
 theorem supp_vertexset_eq (p : G.Walk u v) (q : F.Walk u v) : p.support=q.support → p.vertexSet=q.vertexSet := by

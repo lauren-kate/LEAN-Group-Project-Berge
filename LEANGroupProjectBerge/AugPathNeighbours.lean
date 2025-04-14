@@ -6,6 +6,11 @@ import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
+
+import Mathlib.Order.SymmDiff
+import Mathlib.Data.Set.Basic
+import Mathlib.Data.Set.SymmDiff
+import Mathlib.Logic.ExistsUnique
 import LeanGroupProjectBerge.Basic
 
 
@@ -78,17 +83,31 @@ lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
 
 
 
+
+
 lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M)(h3:x ∈ p.support):
 ∀z, M.Adj x z → p.toSubgraph.Adj x z:= by
   intro z h4
-  have h5: p.length> 0:= by
-    have h6: p.length = 0 ↔ u = v:= by
-      sorry
-    have h7: u ≠ v:= by exact h2.ends_unsaturated.left
-    have h8: p.length ≠ 0:= by aesop
-    sorry
+  have h5: x ∈ M.verts:= by exact M.edge_vert h4
+  have h6: ∃w, M.Adj x w ∧ ∀y, M.Adj x y → y = w:= by aesop
+  have h7: M.Adj x z ∧ ∀ y, M.Adj x y → y = z:= by aesop
+  have h8: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by exact h2.alternates
+  have h8: ∀ w: V, w ≠ z → s(w,x) ∈ p.edges → s(x,z) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x z):= by
+    revert x z
+    exact fun {x} h3 z h4 h5 h6 h7 w a a_1 a_2 ↦ h8 a a_1 a_2
+
+  show s(x,z) ∈ p.toSubgraph.edgeSet
+  by_contra h9
+  have h9: s(x,z) ∉ p.edges:=by aesop
+  have h10: ∃w, w ≠ z:= by
+    use x
+    exact SimpleGraph.Subgraph.Adj.ne h4
   sorry
+
+
+
+
 
 
 
@@ -113,12 +132,12 @@ by_cases h5: (x=u ∨ x = v)
   intro a
   cases a with
   |inl a =>
-    have h5: x ∈ M.verts:= by exact InPathNotEndpointinMatching h2 h5 h3
-    have h6: M.Adj x y := by aesop
-    have h7: ∃!z, M.Adj x z := by aesop
     have h8: ∀z, M.Adj x z → p.toSubgraph.Adj x z:= by exact fun z a ↦ PathVertexAdjMatchingThenPath h1 h2 h3 z a
     simp_all
-  |inr a => aesop
+
+
+  |inr a =>
+    simp_all
 
 
 
