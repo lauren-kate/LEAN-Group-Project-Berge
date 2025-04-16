@@ -37,6 +37,7 @@ cases huv with
     exact h2.ends_unsaturated.right.right
 
 
+
 lemma EndsNotConnectedToMatching {M :G.Subgraph}{p: G.Walk u v}
 (h1: p.IsAugmentingPath M) (h2: x=u ∨ x = v):
 ¬M.Adj x y:= by
@@ -71,15 +72,31 @@ lemma PathNotConnectedToOutsideOfPath{p: G.Walk u v}
   have h8: ¬ p.toSubgraph.Adj x y:= by exact fun a ↦ h7 x (id (SimpleGraph.Subgraph.adj_symm p.toSubgraph a))
   exact h8
 
+namespace SimpleGraph.Walk
+
 lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
-(h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.verts:= by
+(h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.support:= by
+  refine (Subgraph.mem_support M).mpr ?_
   have h4: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by
     exact h1.alternates
   simp_all only [not_or, ne_eq]
-  obtain ⟨h2l, h2r⟩ := h2
-  have h5: u ≠ v:= by exact h1.ends_unsaturated.left
-  have h6: ∃w, s(w,x) ∈ p.edges:= by sorry
-  sorry
+  cases p with
+  |nil=>
+    have h5: x = u:= by aesop
+    obtain ⟨hu,_⟩ := h2
+    contradiction
+  |cons h q =>
+    rename V => w
+    cases q with
+    |nil =>
+      have h5: ¬(x= u) ∨ ¬ (x = v):= by aesop
+      cases h5 <;> aesop
+    |cons h' r =>
+      rename V=> y
+      sorry
+
+
+
 
 
 
@@ -93,23 +110,31 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
   have h6: ∃w, M.Adj x w ∧ ∀y, M.Adj x y → y = w:= by aesop
   have h7: M.Adj x z ∧ ∀ y, M.Adj x y → y = z:= by aesop
   have h8: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by exact h2.alternates
-  have h8: ∀ w: V, w ≠ z → s(w,x) ∈ p.edges → s(x,z) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x z):= by
-    revert x z
+  have h8: ∀ w z : V, w ≠ z → s(w,x) ∈ p.edges → s(x,z) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x z):= by
+    revert x
     exact fun {x} h3 z h4 h5 h6 h7 w a a_1 a_2 ↦ h8 a a_1 a_2
-
+  have h5: x ∈ M.support:= by
+    refine (SimpleGraph.Subgraph.mem_support M).mpr ?_
+    use z
   show s(x,z) ∈ p.toSubgraph.edgeSet
   by_contra h9
   have h9: s(x,z) ∉ p.edges:=by aesop
-  have h10: ∃w, w ≠ z:= by
-    use x
-    exact SimpleGraph.Subgraph.Adj.ne h4
-  sorry
+  revert h8
+  simp
+  cases p with
+  |nil =>
+    sorry
+  |cons q h =>
+    sorry
 
 
 
-
-
-
+  ---use the vertices before and after x in its path
+  ---neither are equal to x because x is not equal to endpoints
+  ---not equal by vertices nodup
+  ---both in edge sets
+  ---neither of these are equal to z as s(x,x_1) and s(x,x_2) are in p.edges but s(x,z) is not
+  ---so by h6 neither M.Adj, leading to final
 
 
 lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
@@ -134,8 +159,6 @@ by_cases h5: (x=u ∨ x = v)
   |inl a =>
     have h8: ∀z, M.Adj x z → p.toSubgraph.Adj x z:= by exact fun z a ↦ PathVertexAdjMatchingThenPath h1 h2 h3 z a
     simp_all
-
-
   |inr a =>
     simp_all
 
