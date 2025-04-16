@@ -190,12 +190,13 @@ w ∉ p.support →  ∀x,s(x,w) ∉ p.edges:= by
 
 
 lemma AdjImpInEdgeSet{G: SimpleGraph V}: G.Adj x w ↔ s(x,w) ∈ G.edgeSet:=by
-exact Eq.to_iff rfl
+  exact Eq.to_iff rfl
 
 lemma InPathSubgraphIffInPath{p: G.Walk u v}: s(x,w) ∈ p.toSubgraph.edgeSet ↔ s(x,w) ∈ p.edgeSet:= by
   apply Iff.intro
   · aesop
   · aesop
+
 
 
 -- if two walks have the same list of vertices, they have the same vertex set
