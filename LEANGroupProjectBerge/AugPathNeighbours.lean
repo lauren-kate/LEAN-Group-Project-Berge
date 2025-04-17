@@ -204,8 +204,10 @@ lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
       exact StartPointUniqueNeigbour h1 h2
     |inr h3 =>
       let p':= p.reverse
-      have h4:p'.toSubgraph.spanningCoe = p.toSubgraph.spanningCoe:=by aesop
-      have h5:p'.IsAugmentingPath M:= by sorry
       subst h3
-      sorry
+      have h4:p'.IsAugmentingPath M:=by sorry
+      have h5:∃! w', (symmDiff M.spanningCoe p'.toSubgraph.spanningCoe).Adj w w':=by
+        exact StartPointUniqueNeigbour h1 h4
+      have h6:p'.toSubgraph.spanningCoe = p.toSubgraph.spanningCoe:=by aesop
+      aesop
   · sorry

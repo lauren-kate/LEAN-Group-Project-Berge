@@ -292,11 +292,9 @@ p.reverse.IsAlternatingPath M:= by
   · have h2: p.IsPath:= by exact h1.toIsPath
     exact (isPath_reverse_iff p).mpr h2
   · intro w x y
-    simp_all
+    simp
     revert y x w
     exact h1.alternates
-
-
 
 
 theorem ReverseAugmentingPathAugmenting{M:G.Subgraph}{p: G.Walk u v}
