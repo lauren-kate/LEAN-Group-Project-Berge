@@ -11,6 +11,8 @@ import Mathlib.Order.SymmDiff
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.SymmDiff
 import Mathlib.Logic.ExistsUnique
+
+
 import LeanGroupProjectBerge.Basic
 
 
@@ -163,7 +165,7 @@ by_cases h5: (x=u ∨ x = v)
 
 
 lemma StartPointUniqueNeigbour {M :G.Subgraph}{p: G.Walk u v}[Finite V]
-(h1: M.IsMatching)(h2: p.IsAugmentingPath M):
+(h2: p.IsAugmentingPath M):
   ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj u w':= by
   cases p with
   |nil =>
@@ -187,10 +189,39 @@ lemma StartPointUniqueNeigbour {M :G.Subgraph}{p: G.Walk u v}[Finite V]
         have h6: u ∈ M.support:= by exact h6
         contradiction
     · unfold symmDiff
-      intro y h5
-      cases h5 with
-      |inl h5 => sorry
-      |inr h5 => sorry
+      intro y h3
+      by_contra hc
+      revert h3
+      simp
+      apply And.intro
+      · have h5: ¬ M.Adj u y:= by
+          have h6: u ∉ M.support:= by exact h2.ends_unsaturated.right.left
+          intro h7
+          have h7:∃z,M.Adj u z:= by aesop
+          contradiction
+        intro h6
+        contradiction
+      · intro a
+        cases a with
+        | inl h =>
+          cases h with
+          | inl h_1 =>
+            subst h_1
+            simp_all only [not_true_eq_false]
+          | inr h_2 => simp_all only [not_true_eq_false]
+        | inr h_1 =>
+          have h5: u ∈ q.support:= by
+            have h6: u ∈ q.toSubgraph.support:= by
+              refine (Subgraph.mem_support q.toSubgraph).mpr ?_
+              use y
+            have h6:u ∈ q.toSubgraph.verts:= by exact q.toSubgraph.edge_vert h_1
+            exact (mem_verts_toSubgraph q).mp h6
+          have h7: ¬(cons h4 q).IsPath:=by
+            have h8: (cons h4 q).IsPath ↔ q.IsPath ∧ u ∉ q.support:= by exact cons_isPath_iff h4 q
+            aesop
+          have h7c: (cons h4 q).IsPath:=by exact h2.toIsPath
+          contradiction
+
 
 --- Lemma for Lauren's node above mine
 lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
@@ -201,13 +232,13 @@ lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
   · cases h3 with
     |inl h3 =>
       subst h3
-      exact StartPointUniqueNeigbour h1 h2
+      exact StartPointUniqueNeigbour h2
     |inr h3 =>
       let p':= p.reverse
       subst h3
-      have h4:p'.IsAugmentingPath M:=by sorry
+      have h4:p.reverse.IsAugmentingPath M:=by exact ReverseAugmentingPathAugmenting h2
       have h5:∃! w', (symmDiff M.spanningCoe p'.toSubgraph.spanningCoe).Adj w w':=by
-        exact StartPointUniqueNeigbour h1 h4
+        exact StartPointUniqueNeigbour h4
       have h6:p'.toSubgraph.spanningCoe = p.toSubgraph.spanningCoe:=by aesop
       aesop
   · sorry
