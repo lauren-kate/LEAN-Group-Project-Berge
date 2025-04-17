@@ -22,7 +22,6 @@ variable {M : G.Subgraph}
 variable {u v w x y: V}
 
 
-
 lemma EndsAugPathMeansNotInM {M :G.Subgraph}{p: G.Walk u v}
 (h2: p.IsAugmentingPath M):
 ∀x ∈ p.support,(x=u ∨ x = v) → x ∉ M.support:= by
@@ -92,13 +91,8 @@ lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
       have h5: ¬(x= u) ∨ ¬ (x = v):= by aesop
       cases h5 <;> aesop
     |cons h' r =>
-      rename V=> y
+      rename V=> X'
       sorry
-
-
-
-
-
 
 
 
@@ -119,13 +113,17 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
   show s(x,z) ∈ p.toSubgraph.edgeSet
   by_contra h9
   have h9: s(x,z) ∉ p.edges:=by aesop
+  have hc: x≠u ∧ x ≠ v:=by
+    have hc:(x=u ∨ x = v) → x ∉ M.support:= by
+      exact fun a ↦ EndsAugPathMeansNotInM h2 x h3 a
+    aesop
   revert h8
   simp
   cases p with
   |nil =>
-    sorry
-  |cons q h =>
-    sorry
+    have hc': x = u:= by aesop
+    aesop
+  |cons h q =>sorry
 
 
 
@@ -164,13 +162,50 @@ by_cases h5: (x=u ∨ x = v)
 
 
 
+lemma StartPointUniqueNeigbour {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+(h1: M.IsMatching)(h2: p.IsAugmentingPath M):
+  ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj u w':= by
+  cases p with
+  |nil =>
+    have hc': u ≠ u:= by exact h2.ends_unsaturated.left
+    aesop
+  |cons h4 q =>
+    rename V => w₂
+    use w₂
+    simp_all only [support_cons, List.mem_cons, true_or, Walk.toSubgraph]
+    apply And.intro
+    · unfold symmDiff
+      right
+      refine (sdiff_adj (G.subgraphOfAdj h4 ⊔ q.toSubgraph).spanningCoe M.spanningCoe u w₂).mpr ?_
+      apply And.intro
+      · simp
+      · let p' := cons h4 q
+        have h5: u ∉ M.support:= by exact h2.ends_unsaturated.right.left
+        intro h6
+        simp_all
+        have h6: ∃z,M.Adj u z:= by aesop
+        have h6: u ∈ M.support:= by exact h6
+        contradiction
+    · unfold symmDiff
+      intro y h5
+      cases h5 with
+      |inl h5 => sorry
+      |inr h5 => sorry
+
 --- Lemma for Lauren's node above mine
 lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
 ∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
-intro w hp
-have h3: ∀x y : V, x ∈ p.support → y ∉ p.support → ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y:= by
-  exact fun x y a a_1 ↦ AugPathMatchingNoNeighbours h1 h2 x y a a_1
-have h3: ∀y:V, y ∉ p.support → ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w y := by
-  aesop
-sorry
+  intro w hp
+  by_cases h3 : (w=u ∨ w = v)
+  · cases h3 with
+    |inl h3 =>
+      subst h3
+      exact StartPointUniqueNeigbour h1 h2
+    |inr h3 =>
+      let p':= p.reverse
+      have h4:p'.toSubgraph.spanningCoe = p.toSubgraph.spanningCoe:=by aesop
+      have h5:p'.IsAugmentingPath M:= by sorry
+      subst h3
+      sorry
+  · sorry

@@ -160,8 +160,6 @@ lemma matching_contr (hm : M₁.IsMatching) {a b c : V} (hne : a≠b) (h : M₁.
     exact hne (by aesop)
 
 
-
-
 lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v w} :
     (Walk.cons h p).IsAlternatingPath M → p.IsAlternatingPath M := by
   intro h_alt
@@ -285,6 +283,27 @@ theorem match_symmdiff_walk_alt (h_m₁ : M₁.IsMatching) (h_m₂ : M₂.IsMatc
     cases h_fwx with
     | inl h => exact h.1
     | inr h => exact False.elim <| matching_contr h_m₂ h_wy_ne h.1.symm h_m₂xy
+
+
+theorem ReverseAlternatingPathAlternating{M:G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAlternatingPath M ):
+p.reverse.IsAlternatingPath M:= by
+  constructor
+  · have h2: p.IsPath:= by exact h1.toIsPath
+    exact (isPath_reverse_iff p).mpr h2
+  · sorry
+
+theorem ReverseAugmentingPathAugmenting{M:G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAugmentingPath M ):
+p.reverse.IsAugmentingPath M:= by
+  constructor
+  · refine ReverseAlternatingPathAlternating ?_
+    exact h1.toIsAlternatingPath
+  · apply And.intro
+    · have h2: u≠v:= by exact h1.ends_unsaturated.left
+      aesop
+    · have h2: u ∉ M.support ∧ v ∉ M.support:= by exact h1.ends_unsaturated.right
+      aesop
 
 
 
