@@ -121,11 +121,41 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
     aesop
   revert h8
   simp
-  cases p with
-  |nil =>
-    have hc': x = u:= by aesop
-    aesop
-  |cons h q =>sorry
+  have h8: ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by sorry
+  obtain ⟨x₁,x₂,h8⟩:=h8
+  use x₁,x₂
+  apply And.intro
+  · aesop
+  · apply And.intro
+    · aesop
+    · apply And.intro
+      · aesop
+      · intro h
+        obtain ⟨h71,h72⟩ := h7
+        obtain ⟨h81,h82,h83⟩ := h8
+        have h10: x₁ = z ∨ x₂ = z := by
+          have h11: M.Adj x₁ x ∨ M.Adj x x₂ := by aesop
+          cases h11 with
+          |inl h11 =>
+            have h12: M.Adj x x₁:= by exact id (Subgraph.adj_symm M h11)
+            have h12: M.Adj x x₁ → x₁ = z:= by aesop
+            have h13: x₁ = z:= by aesop
+            left
+            exact h13
+          |inr h11 =>
+            have h12: M.Adj x x₂ → x₂ = z:= by aesop
+            have h13: x₂ = z:= by aesop
+            right
+            exact h13
+        cases h10 with
+        |inl h10 =>
+          subst z
+          have h11: s(x,x₁) = s(x₁,x):= by exact Sym2.eq_swap
+          aesop
+        |inr h10 =>
+          subst z
+          contradiction
+
 
 
 
