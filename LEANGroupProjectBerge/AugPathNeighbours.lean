@@ -289,4 +289,8 @@ lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
         exact StartPointUniqueNeigbour h4
       have h6:p'.toSubgraph.spanningCoe = p.toSubgraph.spanningCoe:=by aesop
       aesop
-  · sorry
+  · have h4:∃x₁ x₂, s(x₁ ,w) ∈ p.edges ∧ s(w,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
+      refine PathVertexHasTwoNeighbours ?_ w ?_ hp
+      · exact h2.toIsPath
+      · aesop
+    sorry
