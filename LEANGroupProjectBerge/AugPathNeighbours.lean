@@ -97,6 +97,32 @@ lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
       sorry
 
 
+lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
+∀ x ,(x≠ u ∧ x ≠ v) → x ∈ p.support → ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
+  intro x h₁ h₂
+  induction p with
+  |nil=> aesop
+  |@cons u v w hp q ih =>
+    by_cases h3: (x=v)
+    · cases q with
+      |nil=> aesop
+      |cons hq r =>
+        rename V=>v'
+        use u
+        use v'
+        apply And.intro
+        · subst v
+          aesop
+        · apply And.intro
+          · subst v
+            aesop
+          · aesop
+    · aesop
+
+  --split into two cases here
+  --one for if x is exactly adjacent to u,which then use by cases to get
+  --if not use the induction hypothesis
+
 
 lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M)(h3:x ∈ p.support):
@@ -121,7 +147,9 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
     aesop
   revert h8
   simp
-  have h8: ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by sorry
+  have h8: ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
+    have h10: p.IsPath := by exact h2.toIsPath
+    exact PathVertexHasTwoNeighbours h10 x hc h3
   obtain ⟨x₁,x₂,h8⟩:=h8
   use x₁,x₂
   apply And.intro
@@ -154,17 +182,7 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
           aesop
         |inr h10 =>
           subst z
-          contradiction
-
-
-
-
-  ---use the vertices before and after x in its path
-  ---neither are equal to x because x is not equal to endpoints
-  ---not equal by vertices nodup
-  ---both in edge sets
-  ---neither of these are equal to z as s(x,x_1) and s(x,x_2) are in p.edges but s(x,z) is not
-  ---so by h6 neither M.Adj, leading to final
+          aesop
 
 
 lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
