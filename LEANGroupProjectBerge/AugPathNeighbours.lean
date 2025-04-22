@@ -91,6 +91,39 @@ lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
         aesop
     · aesop
 
+lemma PathVertexHasOnlyTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
+∀ x ,(x≠ u ∧ x ≠ v) → x ∈ p.support → ∃x₁ x₂, (s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂ ∧ ∀y,s(x,y) ∈ p.edges→ (y = x₁ ∨ y = x₂)):= by
+intro x h₁ h₂
+induction p with
+|nil => aesop
+|@cons u v w hp q ih =>
+  by_cases h3: (x =v)
+  · cases q with
+    |nil=>aesop
+    |cons hq r=>
+      rename V=> v'
+      use u
+      use v'
+      apply And.intro
+      · aesop
+      · apply And.intro
+        · aesop
+        · apply And.intro
+          · aesop
+          · intro y h5
+            subst h3
+            by_contra h6
+            have h7: s(x,y) ∈ (cons hq r).edges:= by aesop
+            have h8: s(x,y) ∈ r.edges:= by aesop
+            have h9: x ∈ r.support:= by exact fst_mem_support_of_mem_edges r h8
+            have h10: (cons hq r).IsPath:= by exact IsPath.of_cons h
+            by_cases h11: y= v'
+            · aesop
+            · aesop
+
+  · aesop
+
+
 lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
 (h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.support:= by
   refine (Subgraph.mem_support M).mpr ?_
@@ -171,7 +204,7 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
           aesop
 
 
-lemma AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+theorem AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M):
 ∀x y : V, x ∈ p.support → y ∉ p.support →
   ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj x y
@@ -258,7 +291,7 @@ lemma StartPointUniqueNeigbour {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 
 
 --- Lemma for Lauren's node above mine
-lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
+theorem AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
 ∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
   intro w hp
