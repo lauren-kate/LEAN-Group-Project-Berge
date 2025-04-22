@@ -30,7 +30,7 @@ lemma FiniteSubgraphencardEqncard{M:G.Subgraph}[Finite V]: M.edgeSet.encard = M.
   have h2: M.edgeSet.encard = M.edgeSet.ncard:= by exact Eq.symm (Set.Finite.cast_ncard_eq h1)
   exact h2
 
-theorem IfBerge{M:G.Subgraph}{h: M.IsMatching}[Finite V]:
+theorem IfBerge{M:G.Subgraph}(h: M.IsMatching)[Finite V]:
 (∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M) → ¬ IsMaximumMatching M := by
   intro h1
   obtain ⟨u,h1⟩ := h1

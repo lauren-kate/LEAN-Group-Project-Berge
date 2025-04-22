@@ -75,28 +75,6 @@ lemma PathNotConnectedToOutsideOfPath{p: G.Walk u v}
 
 namespace SimpleGraph.Walk
 
-lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
-(h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.support:= by
-  refine (Subgraph.mem_support M).mpr ?_
-  have h4: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by
-    exact h1.alternates
-  simp_all only [not_or, ne_eq]
-  cases p with
-  |nil=>
-    have h5: x = u:= by aesop
-    obtain ⟨hu,_⟩ := h2
-    contradiction
-  |cons h q =>
-    rename V => w
-    cases q with
-    |nil =>
-      have h5: ¬(x= u) ∨ ¬ (x = v):= by aesop
-      cases h5 <;> aesop
-    |cons h' r =>
-      rename V=> X'
-      sorry
-
-
 lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
 ∀ x ,(x≠ u ∧ x ≠ v) → x ∈ p.support → ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
   intro x h₁ h₂
@@ -110,18 +88,26 @@ lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
         rename V=>v'
         use u
         use v'
-        apply And.intro
-        · subst v
-          aesop
-        · apply And.intro
-          · subst v
-            aesop
-          · aesop
+        aesop
     · aesop
 
-  --split into two cases here
-  --one for if x is exactly adjacent to u,which then use by cases to get
-  --if not use the induction hypothesis
+lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.support:= by
+  refine (Subgraph.mem_support M).mpr ?_
+  simp_all
+  have h4: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by
+    exact h1.alternates
+  have h5: ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
+    refine PathVertexHasTwoNeighbours ?_ x h2 h3
+    exact h1.toIsPath
+  obtain ⟨x₁,x₂,h5⟩ := h5
+  by_cases hM: M.Adj x₁ x
+  · use x₁
+    exact id (Subgraph.adj_symm M hM)
+  · have h7: (M.Adj x₁ x ↔  ¬M.Adj x x₂):= by
+      obtain ⟨h51,h52,h53⟩ := h5
+      exact h4 h53 h51 h52
+    aesop
 
 
 lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
@@ -293,4 +279,39 @@ lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
       refine PathVertexHasTwoNeighbours ?_ w ?_ hp
       · exact h2.toIsPath
       · aesop
-    sorry
+    obtain ⟨w',w'',h4⟩:= h4
+    have h5: (M.Adj w' w ↔  ¬M.Adj w w''):= by
+      have hM: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by
+        exact h2.alternates
+      obtain ⟨h41,h42,h43⟩ := h4
+      exact hM h43 h41 h42
+    by_cases h6: M.Adj w' w
+    · use w''
+      simp
+      apply And.intro
+      · unfold symmDiff
+        right
+        simp
+        apply And.intro
+        · refine Subgraph.mem_edgeSet.mp ?_
+          aesop
+        · aesop
+      · intro y h7
+        by_cases h8: y ∈ p.support
+        · cases h7 with
+          |inl h7=>
+            simp at h7
+            obtain ⟨h71,h72⟩:= h7
+            have h9: p.toSubgraph.Adj w y:= by exact PathVertexAdjMatchingThenPath h1 h2 hp y h71
+            contradiction
+          |inr h7=>
+            simp at h7
+            have h9: s(w,y) ∈ p.edges:= by
+              refine (mem_edges_toSubgraph p).mp ?_
+              obtain ⟨h7,_⟩ :=h7
+              exact h7
+            sorry
+        · have h9: ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w y:=by exact AugPathMatchingNoNeighbours h1 h2 w y hp h8
+          contradiction
+    · use w'
+      sorry
