@@ -173,8 +173,6 @@ lemma matching_contr (hm : M₁.IsMatching) {a b c : V} (hne : a≠b) (h : M₁.
     exact hne (by aesop)
 
 
-
-
 lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v w} :
     (Walk.cons h p).IsAlternatingPath M → p.IsAlternatingPath M := by
   intro h_alt
@@ -188,6 +186,29 @@ lemma alt_of_cons {u v w : V} {F : SimpleGraph V} {h : F.Adj u v} {p : F.Walk v 
 
 
 namespace Walk
+
+theorem NotpSupportNotEdge(p:G.Walk u v):
+w ∉ p.support →  ∀x,s(x,w) ∉ p.edges:= by
+  intro h1 x h2
+  have h3: s(x,w) ∈ p.edgeSet:= by exact h2
+  have h4: s(x,w) ∈ p.toSubgraph.edgeSet:=by exact (mem_edges_toSubgraph p).mpr h2
+  have h5: w ∈ p.toSubgraph.support:= by
+    refine (Subgraph.mem_support p.toSubgraph).mpr ?_
+    use x
+    exact Subgraph.adj_symm p.toSubgraph h4
+  have h6: w ∈ p.support:= by exact snd_mem_support_of_mem_edges p h2
+  contradiction
+
+
+lemma AdjImpInEdgeSet{G: SimpleGraph V}: G.Adj x w ↔ s(x,w) ∈ G.edgeSet:=by
+  exact Eq.to_iff rfl
+
+lemma InPathSubgraphIffInPath{p: G.Walk u v}: s(x,w) ∈ p.toSubgraph.edgeSet ↔ s(x,w) ∈ p.edgeSet:= by
+  apply Iff.intro
+  · aesop
+  · aesop
+
+
 
 -- if two walks have the same list of vertices, they have the same vertex set
 theorem supp_vertexset_eq (p : G.Walk u v) (q : F.Walk u v) : p.support=q.support → p.vertexSet=q.vertexSet := by
@@ -275,6 +296,31 @@ theorem match_symmdiff_walk_alt (h_m₁ : M₁.IsMatching) (h_m₂ : M₂.IsMatc
     cases h_fwx with
     | inl h => exact h.1
     | inr h => exact False.elim <| matching_contr h_m₂ h_wy_ne h.1.symm h_m₂xy
+
+
+theorem ReverseAlternatingPathAlternating{M:G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAlternatingPath M ):
+p.reverse.IsAlternatingPath M:= by
+  constructor
+  · have h2: p.IsPath:= by exact h1.toIsPath
+    exact (isPath_reverse_iff p).mpr h2
+  · intro w x y
+    simp
+    revert y x w
+    exact h1.alternates
+
+
+theorem ReverseAugmentingPathAugmenting{M:G.Subgraph}{p: G.Walk u v}
+(h1: p.IsAugmentingPath M ):
+p.reverse.IsAugmentingPath M:= by
+  constructor
+  · refine ReverseAlternatingPathAlternating ?_
+    exact h1.toIsAlternatingPath
+  · apply And.intro
+    · have h2: u≠v:= by exact h1.ends_unsaturated.left
+      aesop
+    · have h2: u ∉ M.support ∧ v ∉ M.support:= by exact h1.ends_unsaturated.right
+      aesop
 
 
 

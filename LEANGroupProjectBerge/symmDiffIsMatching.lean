@@ -171,27 +171,15 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
           h11
         }
     )
-  have h8: ∀ a :  (Sym2 V), a ∈ M'.edgeSet ↔ a ∈ hM.edgeSet := Iff.mpr (Sym2.forall)  h7
+  have h8: M'.edgeSet = hM.edgeSet := by
+    apply?
 
-  have h9: M'.edgeSet ⊆ hM.edgeSet :=
-    have h10: ∀ a :  (Sym2 V), a ∈ M'.edgeSet →  a ∈ hM.edgeSet := by
-      intro a
-      exact Iff.mp (h8 a)
+  have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := by exact congrArg Set.ncard h8
+  h9
 
-    have h11: M'.edgeSet ⊆ hM.edgeSet := h10
-    h11
 
-  have h10: hM.edgeSet ⊆ M'.edgeSet :=
-    have h11: ∀ a :  (Sym2 V), a ∈ hM.edgeSet →  a ∈ M'.edgeSet := by
-      intro a
-      exact Iff.mpr (h8 a)
-    have h12: hM.edgeSet ⊆ M'.edgeSet := h11
-    h12
-  have h11: M'.edgeSet = hM.edgeSet := Set.eq_of_subset_of_subset h9 h10
 
-  have hM' : M'.edgeSet.Finite := by toFinite_tac
-  have hhM : hM.edgeSet.Finite := by toFinite_tac
-  have h12: hM.edgeSet.ncard ≤ M'.edgeSet.ncard := Set.ncard_le_ncard h10 hM'
-  have h13: M'.edgeSet.ncard ≤ hM.edgeSet.ncard := Set.ncard_le_ncard h9 hhM
-  have h14: M'.edgeSet.ncard = hM.edgeSet.ncard := Nat.le_antisymm h13 h12
-  h14
+
+lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
+    sorry
+
