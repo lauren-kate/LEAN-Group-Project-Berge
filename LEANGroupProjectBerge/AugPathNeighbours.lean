@@ -343,8 +343,64 @@ theorem AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
               refine (mem_edges_toSubgraph p).mp ?_
               obtain ⟨h7,_⟩ :=h7
               exact h7
-            sorry
+            have h10: y=w'' ∨ y = w':=by
+              by_contra h10
+              simp_all
+              have h11: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by exact h2.alternates
+              have h11: w'' ≠ y → s(w'',w) ∈ p.edges → s(w,y) ∈ p.edges → (M.Adj w'' w ↔ ¬M.Adj w y):= by exact fun a a_1 a_2 ↦ h11 a a_1 h9
+              simp at h11
+              have hswap1: ¬y = w'':= by aesop
+              have hswap2: s(w'',w) ∈ p.edges := by
+                refine (mem_edges_toSubgraph p).mp ?_
+                refine Subgraph.mem_edgeSet.mpr ?_
+                have h11: p.toSubgraph.Adj w w'':= by
+                  refine Subgraph.mem_edgeSet.mp ?_
+                  refine (mem_edges_toSubgraph p).mpr ?_
+                  exact h4.right.left
+                exact id (Subgraph.adj_symm p.toSubgraph h11)
+              have hswap3: ¬M.Adj w'' w:= by exact fun a ↦ h5 (id (Subgraph.adj_symm M a))
+              aesop
+            cases h10 with
+            |inl h10=> exact h10
+            |inr h10=>
+              subst h10
+              obtain ⟨_,h7⟩:= h7
+              exact False.elim (h7 (id (Subgraph.adj_symm M h6)))
         · have h9: ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w y:=by exact AugPathMatchingNoNeighbours h1 h2 w y hp h8
           contradiction
     · use w'
-      sorry
+      simp
+      apply And.intro
+      · unfold symmDiff
+        right
+        simp
+        apply And.intro
+        · refine Subgraph.adj_symm p.toSubgraph ((fun {V} {G} {G'} {v w} ↦ Subgraph.mem_edgeSet.mp) ?_)
+          exact h4.left
+        · exact fun a ↦ h6 (id (Subgraph.adj_symm M a))
+      · intro y h7
+        by_cases h8: y ∈ p.support
+        · cases h7 with
+          |inl h7=>
+            simp at h7
+            obtain ⟨h71,h72⟩:=h7
+            have h71: p.toSubgraph.Adj w y:= by exact PathVertexAdjMatchingThenPath h1 h2 hp y h71
+            contradiction
+          |inr h7=>
+            simp at h7
+            have h9: s(w,y) ∈ p.edges:= by
+              refine (mem_edges_toSubgraph p).mp ?_
+              obtain ⟨h7,_⟩ :=h7
+              exact h7
+            have h10:y=w'' ∨ y = w':= by
+              by_contra h10
+              simp_all
+              have h11: ∀ ⦃w x y: V⦄, w ≠ y → s(w,x) ∈ p.edges → s(x,y) ∈ p.edges → (M.Adj w x ↔ ¬M.Adj x y):= by exact h2.alternates
+              have h11: w' ≠ y → s(w',w) ∈ p.edges → s(w,y) ∈ p.edges → (M.Adj w' w ↔ ¬M.Adj w y):= by exact fun a a_1 a_2 ↦ h11 a a_1 h9
+              aesop
+            cases h10 with
+            |inl h10=>
+              aesop
+            |inr h10=> exact h10
+        · have h9: ¬ (symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w y:= by exact AugPathMatchingNoNeighbours h1 h2 w y hp h8
+          contradiction
