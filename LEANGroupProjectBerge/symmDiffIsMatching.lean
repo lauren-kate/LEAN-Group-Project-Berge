@@ -9,6 +9,8 @@ import Mathlib.Order.SymmDiff
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.SymmDiff
 import Mathlib.Logic.ExistsUnique
+import Mathlib.Data.Sym.Sym2
+import Mathlib.Data.Set.Card
 
 import LEANGroupProjectBerge.Basic
 import LEANGroupProjectBerge.outsideOfPath
@@ -180,3 +182,4 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
 
 lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
     sorry
+

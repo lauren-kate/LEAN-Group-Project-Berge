@@ -44,6 +44,9 @@ def edgeSet (p : F.Walk u v) : Set (Sym2 V) :=
   {e : Sym2 V | e ∈ p.edges}
 
 
+theorem edgeSet_toSubgraph_eq (p : F.Walk u v) : p.edgeSet = p.toSubgraph.edgeSet :=
+  Eq.symm p.edgeSet_toSubgraph
+
 
 end Walk
 
@@ -69,22 +72,32 @@ def IsMaximumMatching (M : G.Subgraph): Prop :=
   ∧ (¬∃ N : G.Subgraph, N.IsMatching ∧ M.edgeSet.encard < N.edgeSet.encard)
 
 
--- This should go in another file
---theorem BergesTheorem (M : G.Subgraph): IsMaximumMatching M ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=
---  sorry
 
 
 
 --Use this to delete unsaturated vertices to get IsMatching for a subgraph
-def saturatedSubgraph (M : G.Subgraph) : G.Subgraph where
-  verts := M.support;
-  Adj := M.Adj;
-  adj_sub := M.adj_sub;
-  edge_vert := fun h => M.mem_support.mpr ⟨_, h⟩ ;
-  symm := M.symm;
+def saturatedSubgraph (H : SimpleGraph V) (h_sub : H ≤ G) : G.Subgraph where
+  verts := H.support;
+  Adj := H.Adj;
+  adj_sub := @h_sub
+  edge_vert := fun h => ⟨_, h⟩
+  symm := H.symm;
 
 
 end Subgraph
+
+-- To use saturatedSubgraph with M Δ P
+theorem subg_path_symdiff_subg {u v : V} (p : G.Walk u v) (M : G.Subgraph) :
+    symmDiff M.spanningCoe p.toSubgraph.spanningCoe ≤ G := by
+  intro x y h
+  cases h with
+  | inl h =>
+    apply M.adj_sub; aesop
+  | inr h =>
+    show s(x,y) ∈ G.edgeSet; apply p.edges_subset_edgeSet
+    have : s(x,y) ∈ p.toSubgraph.edgeSet := h.1
+    aesop
+
 
 
 
@@ -359,5 +372,15 @@ theorem single_vertex (c : F.ConnectedComponent) (h : x ∈ c.supp) :
     apply False.elim <| Set.mem_def.mp <| h_nset ▸ h_neighbor
 
 
+theorem single_vertex_comp_supp (c : F.ConnectedComponent) (h : x ∈ c.supp) :
+    F.neighborSet x = ∅ → c.supp = {x} := by
+  intro h_nnbr
+  apply Set.ext
+  intro v
+  apply Iff.intro
+  · intro h_vc
+    have : v=x := c.single_vertex h h_nnbr v h_vc
+    rw[this]; trivial
+  · aesop
 
 end ConnectedComponent
