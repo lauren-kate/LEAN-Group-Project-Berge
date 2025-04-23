@@ -166,4 +166,23 @@ theorem matching_symmdiff_gt_aug [Finite V] (h_M_match : M.IsMatching) (h_M'_mat
 -- exists an augmenting path in G
 theorem matching_not_max_aug [Finite V] (h_M_match : M.IsMatching) (h_M_nmax : ¬M.IsMaximumMatching) :
     ∃ (u v : V) (p : G.Walk u v), p.IsAugmentingPath M := by
-  sorry
+  obtain ⟨M', h_M'_match, h_M'_gt⟩ := not_and_not_right.mp h_M_nmax h_M_match
+  have : ∃ (u v : V) (p : (symmDiff M.spanningCoe M'.spanningCoe).Walk u v), p.IsAugmentingPath M := by
+    apply matching_symmdiff_gt_aug h_M_match h_M'_match
+    rw[←(@Set.Finite.cast_ncard_eq _ M.edgeSet (by toFinite_tac)), ←(@Set.Finite.cast_ncard_eq _ M'.edgeSet (by toFinite_tac))] at h_M'_gt
+    simp_all only [Nat.cast_lt, gt_iff_lt]
+  obtain ⟨u, v, p, h_augF⟩ := this
+  have : ∀ e ∈ (symmDiff M.spanningCoe M'.spanningCoe).edgeSet, e ∈ G.edgeSet := by
+    apply Sym2.ind
+    intro x y h_eF
+    cases h_eF with
+    | inl h => simp_all [M.adj_sub]
+    | inr h => simp_all [M'.adj_sub]
+  have h_transcon : ∀ e ∈ p.edges, e ∈ G.edgeSet := by apply Sym2.ind; intro x y h_xy; exact this s(x,y) <| p.adj_of_mem_edges h_xy
+  let pg := p.transfer G h_transcon
+  exists u, v, pg
+  constructor
+  · use h_augF.toIsPath.transfer h_transcon
+    rw[Walk.edges_transfer]
+    exact h_augF.alternates
+  · exact h_augF.ends_unsaturated
