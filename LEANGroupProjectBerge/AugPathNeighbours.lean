@@ -13,7 +13,7 @@ import Mathlib.Data.Set.SymmDiff
 import Mathlib.Logic.ExistsUnique
 
 
-import LeanGroupProjectBerge.Basic
+import LEANGroupProjectBerge.Basic
 
 
 universe u
@@ -375,8 +375,7 @@ theorem AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
         right
         simp
         apply And.intro
-        · refine Subgraph.adj_symm p.toSubgraph ((fun {V} {G} {G'} {v w} ↦ Subgraph.mem_edgeSet.mp) ?_)
-          exact h4.left
+        · exact Subgraph.adj_symm p.toSubgraph (p.mem_edges_toSubgraph.mpr h4.1)
         · exact fun a ↦ h6 (id (Subgraph.adj_symm M a))
       · intro y h7
         by_cases h8: y ∈ p.support
