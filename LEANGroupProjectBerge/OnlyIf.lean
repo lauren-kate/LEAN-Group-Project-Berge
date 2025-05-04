@@ -6,7 +6,7 @@ import Mathlib.Combinatorics.SimpleGraph.Matching
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Subgraph
 
 
-import LeanGroupProjectBerge.symmDiffIsMatching
+import LEANGroupProjectBerge.symmDiffIsMatching
 
 universe u
 variable {V : Type u}
@@ -58,3 +58,5 @@ theorem IfBerge{M:G.Subgraph}(h: M.IsMatching)[Finite V]:
     aesop
   have hmf: M'.IsMatching ∧ M.edgeSet.ncard < M'.edgeSet.ncard := by aesop
   contradiction
+
+#print axioms symmDiff_M_p_is_matching

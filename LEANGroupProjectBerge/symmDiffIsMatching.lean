@@ -14,6 +14,7 @@ import Mathlib.Data.Set.Card
 
 import LEANGroupProjectBerge.Basic
 import LEANGroupProjectBerge.outsideOfPath
+import LEANGroupProjectBerge.AugPathNeighbours
 
 
 namespace SimpleGraph
@@ -30,11 +31,7 @@ open Walk
 
 open Classical
 
---Placeholder from Josh's node
-lemma AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
-(h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
-∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by
-sorry
+
 
 --p.support is ordered list, everything else is set
 --Converting Josh's node to a form that matches what I had.
@@ -172,7 +169,9 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
         }
     )
   have h8: M'.edgeSet = hM.edgeSet := by
-    apply?
+    apply Set.ext; apply Sym2.ind;
+    rw[h5]
+    exact fun x y => ⟨ fun h => ⟨⟨y, h⟩, ⟨x, h.symm ⟩, h ⟩,  fun h => h.2.2 ⟩
 
   have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := by exact congrArg Set.ncard h8
   h9
@@ -182,4 +181,3 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
 
 lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
     sorry
-
