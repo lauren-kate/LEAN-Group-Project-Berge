@@ -33,7 +33,6 @@ open Classical
 
 
 
---p.support is ordered list, everything else is set
 --Converting Josh's node to a form that matches what I had.
 lemma AugPathUniqueNeighbourInAugPathRewrite {M':SimpleGraph V} {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) (h3:M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) :
@@ -175,9 +174,3 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
 
   have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := by exact congrArg Set.ncard h8
   h9
-
-
-
-
-lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
-    sorry

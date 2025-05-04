@@ -133,7 +133,6 @@ lemma xy_in_m'_x_in_m_or_p_hr [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v
 
 lemma xy_in_m'_x_in_m_or_p [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v x y:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) (h4:s(x,y) ∈ M'.edgeSet): x ∈ M'.support → (x ∈ M.spanningCoe.support ∨ x ∈ p.toSubgraph.spanningCoe.support) :=
   fun h5: x ∈ M'.support =>
-  --have h5: s(x,y) ∈ M'.edgeSet := by aesop
   have h6: s(x,y) ∈ symmDiff M.spanningCoe.edgeSet p.toSubgraph.spanningCoe.edgeSet := by aesop
   have h8: s(x,y) ∈ M.spanningCoe.edgeSet ∧ s(x,y) ∉ p.toSubgraph.spanningCoe.edgeSet ∨ s(x,y) ∈ p.toSubgraph.spanningCoe.edgeSet ∧ s(x,y) ∉ M.spanningCoe.edgeSet  := Iff.mp (mem_symDiff_edgeSet_graphs x y M p.toSubgraph M' h3) h4
   have h9: s(x,y) ∈ M.spanningCoe.edgeSet ∨ s(x,y) ∈ p.toSubgraph.spanningCoe.edgeSet := by aesop
