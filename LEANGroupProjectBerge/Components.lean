@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Oscar Bryan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
+-/
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Subgraph
 import Mathlib.Combinatorics.SimpleGraph.Matching
@@ -137,7 +142,7 @@ def DegOneOrTwo (c : G.ConnectedComponent) : Prop :=
 
 
 
---
+
 theorem two_vertex_walk (x y v) (p : G.Walk x v) (h : G.Adj x y) : ExistsUnique (G.Adj x) → ExistsUnique (G.Adj y) → v=x ∨ v=y := by
   intro h_uq_x h_uq_y
   cases p with

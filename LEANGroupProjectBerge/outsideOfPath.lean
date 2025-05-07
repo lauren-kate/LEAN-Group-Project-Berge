@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Oscar Bryan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
+-/
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
@@ -23,11 +28,10 @@ variable {M : G.Subgraph}
 variable {u v w x y: V}
 
 
---Apologies for having every assumption in () not {}, I needed everything explicit whilst writing otherwise I got confused.
 
 open Walk
 
---IsMatching for simple graphs
+--IsMatching for simple graphs (For my own ease of use)
 def IsMatchingSimple (G:SimpleGraph V): Prop :=
   ∀ v : V, v ∈ G.support → ∃! w, G.Adj v w
 
@@ -38,7 +42,7 @@ lemma mem_support_contr (x:V) (H : G.Subgraph) :  x ∉ H.support ↔ ¬ ∃ (w 
 
 lemma not_adj_gen (x w:V) (H:G.Subgraph)(h: x ∉ H.support):  ¬H.Adj x w :=
   have h1: ¬∃ (w : V), H.Adj x w := Iff.mp (mem_support_contr x H) h
-  have h2: ∀ (w:V), ¬H.Adj x w := by aesop--exact h1
+  have h2: ∀ (w:V), ¬H.Adj x w := by aesop
   show ¬H.Adj x w from h2 w
 
 
@@ -133,7 +137,6 @@ lemma xy_in_m'_x_in_m_or_p_hr [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v
 
 lemma xy_in_m'_x_in_m_or_p [Finite V] (M :G.Subgraph) (M':SimpleGraph V) (u v x y:V) (p : G.Walk u v) (h3 : M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) (h4:s(x,y) ∈ M'.edgeSet): x ∈ M'.support → (x ∈ M.spanningCoe.support ∨ x ∈ p.toSubgraph.spanningCoe.support) :=
   fun h5: x ∈ M'.support =>
-  --have h5: s(x,y) ∈ M'.edgeSet := by aesop
   have h6: s(x,y) ∈ symmDiff M.spanningCoe.edgeSet p.toSubgraph.spanningCoe.edgeSet := by aesop
   have h8: s(x,y) ∈ M.spanningCoe.edgeSet ∧ s(x,y) ∉ p.toSubgraph.spanningCoe.edgeSet ∨ s(x,y) ∈ p.toSubgraph.spanningCoe.edgeSet ∧ s(x,y) ∉ M.spanningCoe.edgeSet  := Iff.mp (mem_symDiff_edgeSet_graphs x y M p.toSubgraph M' h3) h4
   have h9: s(x,y) ∈ M.spanningCoe.edgeSet ∨ s(x,y) ∈ p.toSubgraph.spanningCoe.edgeSet := by aesop
@@ -170,10 +173,7 @@ lemma outside_path_unique_neighbour [Finite V] (M :G.Subgraph) (M':SimpleGraph V
     have h11: x ∈ M.spanningCoe.support ∨ x ∈ p.toSubgraph.spanningCoe.support :=  ((x_in_m_or_p M M' u v p h3) h10)
     have h12: x ∈ M.spanningCoe.support := x_in_m_not_p M u v p h5 h11
     have h13: x ∈ M.support := by aesop
-    have h14: M.support = M.verts := by --IsMatching.support_eq_verts - couldn't recognize this
-      refine M.support_subset_verts.antisymm fun v hv => ?_
-      obtain ⟨w, hvw, -⟩ := h1 hv
-      exact ⟨_, hvw⟩
+    have h14: M.support = M.verts := Subgraph.IsMatching.support_eq_verts h1
     have h15: x ∈ M.verts := by aesop
     have h8: ∃! y:V, M.Adj x y := by exact h1 (h15)
     have h9: (∃! y:V, M'.Adj x y) := Iff.mp h7 h8

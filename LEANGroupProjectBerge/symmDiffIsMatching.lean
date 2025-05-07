@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Oscar Bryan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
+-/
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
@@ -25,7 +30,7 @@ variable {G : SimpleGraph V}
 variable {M : G.Subgraph}
 variable {u v w x y: V}
 
---Apologies for having every assumption in () not {}, I needed everything explicit whilst writing otherwise I got confused.
+
 
 open Walk
 
@@ -33,8 +38,7 @@ open Classical
 
 
 
---p.support is ordered list, everything else is set
---Converting Josh's node to a form that matches what I had.
+--Converting AugPathUniqueNeighbourInAugPath to another form
 lemma AugPathUniqueNeighbourInAugPathRewrite {M':SimpleGraph V} {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) (h3:M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) :
 ∀w : V, w∈p.toSubgraph.support → ∃! w',M'.Adj w w' := by
@@ -175,9 +179,3 @@ lemma ncard_m'_equals_hm [Finite V] (M hM : G.Subgraph) (M': SimpleGraph V) (u v
 
   have h9: M'.edgeSet.ncard = hM.edgeSet.ncard := by exact congrArg Set.ncard h8
   h9
-
-
-
-
-lemma symmDiff_M_p_is_matching2 (M : G.Subgraph) (u v : V ) (p: G.Walk u v) (h1: M.IsMatching) (h2: p.IsAugmentingPath M): (symmDiff M p.toSubgraph).IsMatching :=
-    sorry

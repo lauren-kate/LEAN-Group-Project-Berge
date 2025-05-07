@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2024 Joe Cool. All rights reserved.
+Copyright (c) 2025 Oscar Bryan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Joe Cool
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
 -/
 
 import Mathlib.Combinatorics.SimpleGraph.Basic
@@ -62,7 +62,7 @@ def augPath (M : G.Subgraph) (u v : V) : Type u :=
 
 
 
---Added maximal matching for completeness' sake with maximum matchings (maximum and maximal go hand in hand I feel) - we dont need for Berge's
+--Added maximal matching for completeness' sake with maximum matchings - we dont need for Berge's
 def IsMaximalMatching (M : G.Subgraph): Prop :=
   M.IsMatching ∧
   (¬∃ v w, v ∉ M.support ∧ w ∉ M.support ∧ G.Adj v w)
