@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Oscar Bryan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Oscar Bryan, Reuben Brownn, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
 -/
 
 import Mathlib.Combinatorics.SimpleGraph.Basic

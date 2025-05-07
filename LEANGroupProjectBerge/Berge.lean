@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Oscar Bryan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Oscar Bryan, Reuben Brown, Spraeha Jha, A. Basak Kaya, Joshua Render, Lauren Kate Thompson
+-/
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Combinatorics.SimpleGraph.Walk
 import Mathlib.Combinatorics.SimpleGraph.Path
@@ -9,7 +14,6 @@ import Mathlib.Logic.Basic
 import Mathlib.Data.Set.Card
 
 import LEANGroupProjectBerge.Basic
---import LEANGroupProjectBerge.SymDiffEvenCycle
 import LEANGroupProjectBerge.LocateAugPath
 import LEANGroupProjectBerge.OnlyIf
 
