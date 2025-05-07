@@ -9,7 +9,7 @@ import Mathlib.Logic.Basic
 import Mathlib.Data.Set.Card
 
 import LEANGroupProjectBerge.Basic
-import LEANGroupProjectBerge.SymDiffEvenCycle
+--import LEANGroupProjectBerge.SymDiffEvenCycle
 import LEANGroupProjectBerge.LocateAugPath
 import LEANGroupProjectBerge.OnlyIf
 
@@ -23,6 +23,7 @@ variable {u v w: V}
 
 
 namespace Walk
+
 
 
 theorem BergesTheorem [Finite V] (M : G.Subgraph){h: M.IsMatching}:  M.IsMaximumMatching ↔ ¬∃ u v: V, ∃ p: G.Walk u v, p.IsAugmentingPath M :=

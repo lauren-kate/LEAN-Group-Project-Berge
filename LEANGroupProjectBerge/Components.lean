@@ -137,7 +137,7 @@ def DegOneOrTwo (c : G.ConnectedComponent) : Prop :=
 
 
 
---
+
 theorem two_vertex_walk (x y v) (p : G.Walk x v) (h : G.Adj x y) : ExistsUnique (G.Adj x) → ExistsUnique (G.Adj y) → v=x ∨ v=y := by
   intro h_uq_x h_uq_y
   cases p with

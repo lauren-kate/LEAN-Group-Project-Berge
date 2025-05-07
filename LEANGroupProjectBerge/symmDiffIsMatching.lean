@@ -25,7 +25,7 @@ variable {G : SimpleGraph V}
 variable {M : G.Subgraph}
 variable {u v w x y: V}
 
---Apologies for having every assumption in () not {}, I needed everything explicit whilst writing otherwise I got confused.
+
 
 open Walk
 
@@ -33,7 +33,7 @@ open Classical
 
 
 
---Converting Josh's node to a form that matches what I had.
+--Converting AugPathUniqueNeighbourInAugPath to another form
 lemma AugPathUniqueNeighbourInAugPathRewrite {M':SimpleGraph V} {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) (h3:M' = (symmDiff M.spanningCoe p.toSubgraph.spanningCoe)) :
 ∀w : V, w∈p.toSubgraph.support → ∃! w',M'.Adj w w' := by

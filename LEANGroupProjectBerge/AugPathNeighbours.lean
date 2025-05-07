@@ -57,6 +57,7 @@ lemma EndsNotConnectedToMatching {M :G.Subgraph}{p: G.Walk u v}
     contradiction
 
 
+
 lemma PathNotConnectedToOutsideOfPath{p: G.Walk u v}
 (h2: y ∉ p.support):
 ¬p.toSubgraph.Adj x y := by
@@ -73,7 +74,10 @@ lemma PathNotConnectedToOutsideOfPath{p: G.Walk u v}
   have h8: ¬ p.toSubgraph.Adj x y:= by exact fun a ↦ h7 x (id (SimpleGraph.Subgraph.adj_symm p.toSubgraph a))
   exact h8
 
+
+
 namespace SimpleGraph.Walk
+
 
 lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
 ∀ x ,(x≠ u ∧ x ≠ v) → x ∈ p.support → ∃x₁ x₂, s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂:= by
@@ -90,6 +94,8 @@ lemma PathVertexHasTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
         use v'
         aesop
     · aesop
+
+
 
 lemma PathVertexHasOnlyTwoNeighbours {p:G.Walk u v}(h:p.IsPath):
 ∀ x ,(x≠ u ∧ x ≠ v) → x ∈ p.support → ∃x₁ x₂, (s(x₁ ,x) ∈ p.edges ∧ s(x,x₂) ∈ p.edges ∧ x₁ ≠ x₂ ∧ ∀y,s(x,y) ∈ p.edges→ (y = x₁ ∨ y = x₂)):= by
@@ -124,6 +130,7 @@ induction p with
   · aesop
 
 
+
 lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
 (h1: p.IsAugmentingPath M) (h2: ¬ (x=u ∨ x = v))(h3: x ∈ p.support): x ∈ M.support:= by
   refine (Subgraph.mem_support M).mpr ?_
@@ -141,6 +148,7 @@ lemma InPathNotEndpointinMatching {M: G.Subgraph}{p: G.Walk u v}
       obtain ⟨h51,h52,h53⟩ := h5
       exact h4 h53 h51 h52
     aesop
+
 
 
 lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
@@ -202,6 +210,7 @@ lemma PathVertexAdjMatchingThenPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
         |inr h10 =>
           subst z
           aesop
+
 
 
 theorem AugPathMatchingNoNeighbours {M :G.Subgraph}{p: G.Walk u v}[Finite V]
@@ -290,7 +299,7 @@ lemma StartPointUniqueNeigbour {M :G.Subgraph}{p: G.Walk u v}[Finite V]
           contradiction
 
 
---- Lemma for Lauren's node above mine
+
 theorem AugPathUniqueNeighbourInAugPath {M :G.Subgraph}{p: G.Walk u v}[Finite V]
 (h1: M.IsMatching)(h2: p.IsAugmentingPath M) :
 ∀w : V, w∈p.support → ∃! w',(symmDiff M.spanningCoe p.toSubgraph.spanningCoe).Adj w w' := by

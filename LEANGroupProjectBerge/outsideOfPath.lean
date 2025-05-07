@@ -23,11 +23,10 @@ variable {M : G.Subgraph}
 variable {u v w x y: V}
 
 
---Apologies for having every assumption in () not {}, I needed everything explicit whilst writing otherwise I got confused.
 
 open Walk
 
---IsMatching for simple graphs
+--IsMatching for simple graphs (For my own ease of use)
 def IsMatchingSimple (G:SimpleGraph V): Prop :=
   ∀ v : V, v ∈ G.support → ∃! w, G.Adj v w
 
@@ -38,7 +37,7 @@ lemma mem_support_contr (x:V) (H : G.Subgraph) :  x ∉ H.support ↔ ¬ ∃ (w 
 
 lemma not_adj_gen (x w:V) (H:G.Subgraph)(h: x ∉ H.support):  ¬H.Adj x w :=
   have h1: ¬∃ (w : V), H.Adj x w := Iff.mp (mem_support_contr x H) h
-  have h2: ∀ (w:V), ¬H.Adj x w := by aesop--exact h1
+  have h2: ∀ (w:V), ¬H.Adj x w := by aesop
   show ¬H.Adj x w from h2 w
 
 
@@ -169,10 +168,7 @@ lemma outside_path_unique_neighbour [Finite V] (M :G.Subgraph) (M':SimpleGraph V
     have h11: x ∈ M.spanningCoe.support ∨ x ∈ p.toSubgraph.spanningCoe.support :=  ((x_in_m_or_p M M' u v p h3) h10)
     have h12: x ∈ M.spanningCoe.support := x_in_m_not_p M u v p h5 h11
     have h13: x ∈ M.support := by aesop
-    have h14: M.support = M.verts := by --IsMatching.support_eq_verts - couldn't recognize this
-      refine M.support_subset_verts.antisymm fun v hv => ?_
-      obtain ⟨w, hvw, -⟩ := h1 hv
-      exact ⟨_, hvw⟩
+    have h14: M.support = M.verts := Subgraph.IsMatching.support_eq_verts h1
     have h15: x ∈ M.verts := by aesop
     have h8: ∃! y:V, M.Adj x y := by exact h1 (h15)
     have h9: (∃! y:V, M'.Adj x y) := Iff.mp h7 h8
